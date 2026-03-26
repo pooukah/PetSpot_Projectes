@@ -1,0 +1,9 @@
+/* ============ REGISTRO ============ */
+
+.info-banner {
+  background: var(--accent-light);
+  border: 1.5px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}

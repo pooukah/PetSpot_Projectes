@@ -1,0 +1,68 @@
+/* ============ CLIENTE — INICIO ============ */
+
+.date-chip {
+  font-size: 13px;
+  color: var(--text2);
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 6px 14px;
+}
+
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.quick-btn {
+  background: var(--bg2);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 22px 14px 18px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  text-decoration: none;
+  color: var(--text);
+  display: block;
+}
+.quick-btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-light);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+.quick-icon {
+  width: 52px; height: 52px;
+  background: var(--bg3);
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 12px;
+  transition: background 0.18s;
+}
+.quick-icon svg { width: 26px; height: 26px; stroke: var(--text2); transition: stroke 0.18s; }
+.quick-btn:hover .quick-icon { background: var(--accent-light); }
+.quick-btn:hover .quick-icon svg { stroke: var(--accent); }
+.quick-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text2);
+  transition: color 0.18s;
+}
+.quick-btn:hover .quick-label { color: var(--accent); }
+
+.inicio-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.mascotas-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.card-title svg { width: 18px; height: 18px; flex-shrink: 0; }

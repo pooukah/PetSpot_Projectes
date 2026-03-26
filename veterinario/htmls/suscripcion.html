@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PetSpot — Suscripción</title>
+<link rel="stylesheet" href="../../ambos/shared.css">
+<link rel="stylesheet" href="../styles/suscripcion.css">
+</head>
+<body class="veterinario">
+<div class="main">
+  <div class="page-header">
+    <div><h1>Suscripción</h1><p>Tu plan actual y opciones de mejora</p></div>
+    <div class="current-plan-chip">
+      <span id="icon-check-chip"></span>
+      Plan actual: <strong id="current-plan-name">Básico</strong> · Renueva el 17/04/2026
+    </div>
+  </div>
+
+  <div class="plans-grid" id="plans-grid"></div>
+
+  <div class="card" style="margin-top:22px">
+    <div class="card-title"><span id="icon-card"></span> Historial de facturación</div>
+    <table class="table">
+      <thead><tr><th>Fecha</th><th>Plan</th><th>Importe</th><th>Estado</th><th>Factura</th></tr></thead>
+      <tbody id="billing-body"></tbody>
+    </table>
+  </div>
+</div>
+<script src="../../ambos/icons.js"></script>
+<script src="../../ambos/shared.js"></script>
+<script src="../../ambos/layout.js"></script>
+<script src="../scripts/suscripcion.js"></script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+/* ============ VETERINARIO — PERFIL ============ */
+
+.vet-profile-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 22px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--border);
+}
+
+.vet-avatar-wrap { position: relative; flex-shrink: 0; }
+
+.vet-avatar {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px; font-weight: 800; color: #fff;
+  border: 3px solid var(--accent-light);
+}
+
+.avatar-edit-btn {
+  position: absolute; bottom: 0; right: 0;
+  width: 26px; height: 26px;
+  background: var(--bg2);
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; padding: 0;
+  transition: border-color 0.18s;
+}
+.avatar-edit-btn:hover { border-color: var(--accent); }
+.avatar-edit-btn svg { width: 12px; height: 12px; }
+
+.vet-name  { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; }
+.vet-email { font-size: 13px; color: var(--text2); margin-top: 3px; }
+.vet-clinic {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 13px; color: var(--text2); margin-top: 4px;
+}
+.vet-clinic svg { width: 13px; height: 13px; stroke: var(--text3); }
+
+.vet-specs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.spec-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 11px;
+  background: var(--accent-light);
+  color: var(--accent);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}

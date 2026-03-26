@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PetSpot — Inicio</title>
+<link rel="stylesheet" href="../../ambos/shared.css">
+<link rel="stylesheet" href="../styles/inicio.css">
+</head>
+<body class="veterinario">
+<div class="main">
+  <div class="page-header">
+    <div>
+      <h1>Inicio</h1>
+      <p id="date-chip-vet">Cargando...</p>
+    </div>
+  </div>
+
+  <div class="stats-grid" id="stats-grid"></div>
+
+  <div class="vet-inicio-grid">
+    <div>
+      <div class="card" style="margin-bottom:18px">
+        <div class="card-title"><span id="icon-cal"></span> Citas de hoy
+          <a href="citas.html" class="card-title-action">Ver agenda →</a>
+        </div>
+        <div id="hoy-citas"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span id="icon-euro"></span> Ingresos esta semana</div>
+        <div class="bar-chart-wrap">
+          <div class="bar-chart" id="ingr-chart"></div>
+          <div class="bar-chart-labels" id="ingr-labels"></div>
+        </div>
+        <div class="ingr-summary">
+          <span>Total semana: <strong>1,840€</strong></span>
+          <span>Media/día: <strong>263€</strong></span>
+          <span class="ingr-change">↑ 12% vs semana anterior</span>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:18px">
+        <div class="card-title"><span id="icon-users"></span> Clientes recientes</div>
+        <div id="clientes-list"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span id="icon-alert"></span> Alertas</div>
+        <div class="alerts-list" id="alerts-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="../../ambos/icons.js"></script>
+<script src="../../ambos/shared.js"></script>
+<script src="../../ambos/layout.js"></script>
+<script src="../scripts/inicio.js"></script>
+</body>
+</html>

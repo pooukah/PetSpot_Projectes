@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PetSpot — Mi Perfil</title>
+<link rel="stylesheet" href="../../ambos/shared.css">
+<link rel="stylesheet" href="../styles/perfil.css">
+</head>
+<body class="cliente">
+<div class="main">
+  <div class="page-header">
+    <div><h1>Mi Perfil</h1><p>Gestiona tu cuenta y mascotas</p></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showSection('datos',this)">Datos personales</button>
+    <button class="tab" onclick="showSection('mascotas',this)">Mascotas</button>
+    <button class="tab" onclick="showSection('config',this)">Configuración</button>
+  </div>
+
+  <!-- DATOS PERSONALES -->
+  <div id="sec-datos">
+    <div class="card">
+      <div class="profile-top">
+        <div class="profile-avatar-wrap">
+          <div class="profile-avatar" id="profile-av">M</div>
+          <button class="avatar-edit-btn" title="Cambiar foto"><span id="icon-edit-av"></span></button>
+        </div>
+        <div class="profile-info">
+          <div class="profile-name" id="profile-name">María Fernández</div>
+          <div class="profile-email" id="profile-email">maria@email.com</div>
+          <div class="profile-verified"><span id="icon-check-sm"></span> Cuenta verificada</div>
+        </div>
+      </div>
+      <div class="grid-2" style="gap:14px;margin-top:4px">
+        <div class="form-group"><label class="form-label">Nombre completo</label><input class="form-input" id="input-nombre" placeholder="Tu nombre completo"></div>
+        <div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="input-tel" placeholder="+34 600 000 000"></div>
+        <div class="form-group"><label class="form-label">Correo electrónico</label><input class="form-input" id="input-email" placeholder="correo@email.com"></div>
+        <div class="form-group"><label class="form-label">Código postal</label><input class="form-input" id="input-cp" placeholder="08001"></div>
+        <div class="form-group" style="grid-column:1/-1"><label class="form-label">Dirección</label><input class="form-input" id="input-dir" placeholder="Calle, número, piso..."></div>
+      </div>
+      <button class="btn btn-primary" style="margin-top:8px" onclick="guardarDatos()">Guardar cambios</button>
+    </div>
+  </div>
+
+  <!-- MASCOTAS -->
+  <div id="sec-mascotas" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="font-size:17px;font-weight:700">Mis mascotas <span id="contador-mascotas" style="color:var(--text2);font-size:14px;font-weight:400">(0)</span></div>
+      <button class="btn btn-primary btn-sm" id="btn-add-pet"><span id="icon-plus-pet"></span> Añadir mascota</button>
+    </div>
+    <div id="mascotas-list"></div>
+  </div>
+
+  <!-- CONFIGURACIÓN -->
+  <div id="sec-config" style="display:none">
+    <div class="grid-2" style="gap:18px">
+      <div class="card">
+        <div class="card-title">Notificaciones</div>
+        <div id="notif-list"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Seguridad</div>
+        <div class="form-group"><label class="form-label">Contraseña actual</label><input type="password" class="form-input" placeholder="••••••••"></div>
+        <div class="form-group"><label class="form-label">Nueva contraseña</label><input type="password" class="form-input" placeholder="••••••••"></div>
+        <div class="form-group"><label class="form-label">Confirmar contraseña</label><input type="password" class="form-input" placeholder="••••••••"></div>
+        <button class="btn btn-primary btn-sm" onclick="PetSpot.notify('✅ Contraseña actualizada')">Cambiar contraseña</button>
+        <div class="divider"></div>
+        <div class="notif-row">
+          <div>
+            <div style="font-size:14px;font-weight:600">Autenticación 2FA</div>
+            <div style="font-size:12px;color:var(--text2)">Código por SMS al iniciar sesión</div>
+          </div>
+          <div class="toggle" onclick="this.classList.toggle('on');PetSpot.notify(this.classList.contains('on')?'🔐 2FA activado':'2FA desactivado')"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AÑADIR MASCOTA -->
+<div class="modal-overlay" id="modal-pet">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Añadir mascota</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()"><span id="icon-x-pet"></span></button>
+    </div>
+    <div style="text-align:center;margin-bottom:16px">
+      <div class="pet-photo-circle"><span id="icon-paw-modal"></span></div>
+      <div style="font-size:12px;color:var(--text2);margin-top:6px">El icono se asignará según la especie</div>
+    </div>
+    <div class="grid-2" style="gap:12px">
+      <div class="form-group"><label class="form-label">Nombre</label><input class="form-input" id="nueva-nombre" placeholder="Nombre de la mascota"></div>
+      <div class="form-group"><label class="form-label">Especie</label>
+        <select class="form-input" id="nueva-especie">
+          <option>Perro</option><option>Gato</option><option>Conejo</option><option>Hámster</option><option>Otro</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Raza</label><input class="form-input" id="nueva-raza" placeholder="Labrador, Siamés..."></div>
+      <div class="form-group"><label class="form-label">Peso (kg)</label><input type="number" class="form-input" id="nueva-peso" placeholder="5.2" step="0.1"></div>
+      <div class="form-group"><label class="form-label">Fecha de nacimiento</label><input type="date" class="form-input" id="nueva-fecha"></div>
+      <div class="form-group"><label class="form-label">Nº Microchip</label><input class="form-input" id="nueva-microchip" placeholder="724099..."></div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px" onclick="addPet()">Añadir mascota</button>
+  </div>
+</div>
+
+<script src="../../ambos/icons.js"></script>
+<script src="../../ambos/shared.js"></script>
+<script src="../../ambos/layout.js"></script>
+<script src="../scripts/perfil.js"></script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+/* ============ CLIENTE — MAPA ============ */
+.map-filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+.map-layout { display: grid; grid-template-columns: 340px 1fr; gap: 18px; }
+.clinic-list { overflow-y: auto; max-height: 580px; display: flex; flex-direction: column; gap: 10px; }
+.map-container { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; min-height: 520px; position: relative; }
+.map-svg-wrap { width: 100%; height: 100%; }
+.map-svg-wrap svg { width: 100%; height: 100%; }
+
+.clinic-card {
+  background: var(--bg2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 15px 16px;
+  cursor: pointer;
+  transition: border-color 0.18s, transform 0.18s;
+}
+.clinic-card:hover, .clinic-card.active { border-color: var(--accent); transform: translateX(3px); }
+.clinic-name { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.clinic-addr { font-size: 13px; color: var(--text2); display: flex; align-items: center; gap: 6px; }
+.clinic-addr svg { width: 13px; height: 13px; color: var(--text3); flex-shrink: 0; }
+.clinic-meta { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; align-items: center; }
+.clinic-stars { color: #ffa500; font-size: 12px; display: flex; align-items: center; gap: 3px; }
+.clinic-stars svg { width: 12px; height: 12px; fill: #ffa500; }
+.clinic-actions { display: flex; gap: 8px; margin-top: 10px; }

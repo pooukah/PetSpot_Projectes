@@ -1,0 +1,8 @@
+/* ============ CLIENTE — CHAT ============ */
+.chat-search-wrap {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.chat-layout {
+  height: calc(100vh - var(--topbar-h) - 100px);
+}

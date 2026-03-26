@@ -1,0 +1,67 @@
+/* ============ CLIENTE — CITAS ============ */
+
+.cal-grid-wrap {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 18px;
+}
+
+.cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.cal-head-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 6px;
+}
+.cal-head-row span {
+  font-size: 11px;
+  color: var(--text3);
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+  padding: 4px 0;
+}
+
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.cal-day {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s;
+  position: relative;
+}
+.cal-day:hover { background: var(--bg3); }
+.cal-day.today { background: var(--accent); color: #fff; font-weight: 800; }
+.cal-day.has-cita::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.cal-day.today.has-cita::after { background: #fff; }
+
+.cal-day.selected {
+  background: var(--accent-light);
+  border: 1.5px solid var(--accent);
+  font-weight: 700;
+  color: var(--accent);
+}
+.cal-day { cursor: pointer; }

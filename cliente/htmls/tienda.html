@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PetSpot — Tienda</title>
+<link rel="stylesheet" href="../../ambos/shared.css">
+<link rel="stylesheet" href="../styles/tienda.css">
+</head>
+<body class="cliente">
+<div class="main">
+  <div class="page-header">
+    <div><h1>Tienda</h1><p>Productos veterinarios para tu mascota</p></div>
+    <div class="search-bar" style="max-width:240px">
+      <span id="icon-search"></span>
+      <input type="text" id="search-input" placeholder="Buscar producto..." oninput="filterProducts()">
+    </div>
+  </div>
+
+  <div class="tabs" style="margin-bottom:0">
+    <button class="tab active" onclick="showTab('productos',this)">Productos</button>
+    <button class="tab" onclick="showTab('pedidos',this)">Mis Pedidos</button>
+  </div>
+
+  <!-- PRODUCTOS -->
+  <div id="tab-productos">
+    <div class="cat-filters" id="cat-filters"></div>
+    <div class="shop-layout">
+      <div>
+        <div class="products-grid" id="products-grid"></div>
+      </div>
+      <div>
+        <div class="card cart-card">
+          <div class="card-title">
+            <span id="icon-cart"></span> Carrito
+            <span class="card-title-action" id="cart-count">0 artículos</span>
+          </div>
+          <div id="cart-items"><p class="empty-msg">Tu carrito está vacío</p></div>
+          <div class="cart-summary">
+            <div class="cart-row"><span>Subtotal</span><strong id="subtotal">0.00€</strong></div>
+            <div class="cart-row" style="font-size:13px;color:var(--text2)"><span>Envío</span><span style="color:var(--accent)">Gratis +25€</span></div>
+            <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:10px" onclick="checkout()">
+              <span id="icon-check"></span> Finalizar compra
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MIS PEDIDOS -->
+  <div id="tab-pedidos" style="display:none;margin-top:18px">
+    <div id="pedidos-lista"></div>
+  </div>
+</div>
+
+<!-- MODAL CHECKOUT -->
+<div class="modal-overlay" id="modal-checkout">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Finalizar compra</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nombre del titular</label>
+      <input class="form-input" id="checkout-nombre" placeholder="Nombre completo">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Número de cuenta (IBAN)</label>
+      <input class="form-input" id="checkout-cuenta" placeholder="ES00 0000 0000 0000 0000 0000">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Dirección de envío</label>
+      <input class="form-input" id="checkout-dir" placeholder="Dirección completa">
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="confirmarCompra()">Confirmar compra</button>
+  </div>
+</div>
+
+<script src="../../ambos/icons.js"></script>
+<script src="../../ambos/shared.js"></script>
+<script src="../../ambos/layout.js"></script>
+<script src="../scripts/tienda.js"></script>
+</body>
+</html>

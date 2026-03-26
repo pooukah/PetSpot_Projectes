@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PetSpot — Inicio</title>
+<link rel="stylesheet" href="../../ambos/shared.css">
+<link rel="stylesheet" href="../styles/inicio.css">
+</head>
+<body class="cliente">
+<div class="main">
+  <div class="page-header">
+    <div><h1>Inicio</h1><p>Resumen de tu actividad en PetSpot</p></div>
+    <div class="date-chip" id="date-chip"></div>
+  </div>
+
+  <div class="quick-actions">
+    <a href="citas.html" class="quick-btn">
+      <div class="quick-icon" id="qi-citas"></div>
+      <div class="quick-label">Nueva cita</div>
+    </a>
+    <a href="chat.html" class="quick-btn">
+      <div class="quick-icon" id="qi-chat"></div>
+      <div class="quick-label">Chat</div>
+    </a>
+    <a href="mapa.html" class="quick-btn">
+      <div class="quick-icon" id="qi-mapa"></div>
+      <div class="quick-label">Buscar clínica</div>
+    </a>
+    <a href="tienda.html" class="quick-btn">
+      <div class="quick-icon" id="qi-tienda"></div>
+      <div class="quick-label">Tienda</div>
+    </a>
+  </div>
+
+  <div class="inicio-grid">
+    <div class="card">
+      <div class="card-title">
+        <span id="icon-cal"></span> Próximas citas
+        <a href="citas.html" class="card-title-action">Ver todas →</a>
+      </div>
+      <div id="citas-list"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">
+        <span id="icon-paw"></span> Mis mascotas
+        <a href="perfil.html" class="card-title-action">Gestionar →</a>
+      </div>
+      <div class="mascotas-grid" id="mascotas-list"></div>
+    </div>
+  </div>
+</div>
+<script src="../../ambos/icons.js"></script>
+<script src="../../ambos/shared.js"></script>
+<script src="../../ambos/layout.js"></script>
+<script src="../scripts/inicio.js"></script>
+</body>
+</html>

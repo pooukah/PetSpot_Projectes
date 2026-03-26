@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PetSpot — Citas</title>
+<link rel="stylesheet" href="../../ambos/shared.css">
+<link rel="stylesheet" href="../styles/citas.css">
+</head>
+<body class="cliente">
+
+<div class="main">
+  <div class="page-header">
+    <div><h1>Citas</h1><p>Gestiona tus consultas veterinarias</p></div>
+    <button class="btn btn-primary" id="btn-nueva"><span id="btn-nueva-icon"></span> Nueva cita</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('proximas',this)">Próximas</button>
+    <button class="tab" onclick="switchTab('historial',this)">Historial</button>
+    <button class="tab" onclick="switchTab('calendario',this)">Calendario</button>
+  </div>
+
+  <!-- PRÓXIMAS -->
+  <div id="tab-proximas">
+    <div id="list-proximas"></div>
+  </div>
+
+  <!-- HISTORIAL (divs, no tabla) -->
+  <div id="tab-historial" style="display:none">
+    <div id="list-historial"></div>
+  </div>
+
+  <!-- CALENDARIO -->
+  <div id="tab-calendario" style="display:none">
+    <div class="cal-grid-wrap">
+      <div class="card">
+        <div class="cal-nav">
+          <button class="btn btn-ghost btn-sm" onclick="changeMonth(-1)">‹</button>
+          <span id="cal-title" style="font-weight:700;font-size:15px"></span>
+          <button class="btn btn-ghost btn-sm" onclick="changeMonth(1)">›</button>
+        </div>
+        <div class="cal-head-row">
+          <span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span>
+        </div>
+        <div class="calendar" id="cal-grid"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span id="icon-cal2"></span> Citas del día seleccionado</div>
+        <div id="cal-citas-list">
+          <p style="color:var(--text3);font-size:13px;padding:12px 0">Clica un día para ver sus citas</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVA CITA -->
+<div class="modal-overlay" id="modal-cita">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Nueva cita</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()"><span id="icon-x"></span></button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Mascota</label>
+      <select class="form-input" id="nueva-mascota">
+        <option value="">— Selecciona —</option>
+        <option>Luna (Labrador)</option>
+        <option>Miso (Siamés)</option>
+        <option>Coco (Mini Rex)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Veterinario</label>
+      <select class="form-input" id="nueva-vet">
+        <option value="">— Selecciona —</option>
+        <option>Dra. García — Clínica VetPro</option>
+        <option>Dr. Martínez — VetSalut BCN</option>
+        <option>Dra. López — AnimaCare Vet</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Motivo de consulta</label>
+      <input type="text" class="form-input" id="nueva-motivo" placeholder="Revisión anual, vacunación...">
+    </div>
+    <div class="grid-2" style="gap:12px">
+      <div class="form-group">
+        <label class="form-label">Fecha</label>
+        <input type="date" class="form-input" id="nueva-fecha">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Hora</label>
+        <select class="form-input" id="nueva-hora">
+          <option>09:00</option><option>09:30</option><option>10:00</option>
+          <option>10:30</option><option>11:00</option><option>16:00</option>
+          <option>16:30</option><option>17:00</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="solicitarCita()">Solicitar cita</button>
+  </div>
+</div>
+
+<script src="../../ambos/icons.js"></script>
+<script src="../../ambos/shared.js"></script>
+<script src="../../ambos/layout.js"></script>
+<script src="../scripts/citas.js"></script>
+</body>
+</html>

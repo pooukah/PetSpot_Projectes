@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PetSpot — Analíticas</title>
+<link rel="stylesheet" href="../../ambos/shared.css">
+<link rel="stylesheet" href="../styles/analiticas.css">
+</head>
+<body class="veterinario">
+<div class="main">
+  <div class="page-header">
+    <div><h1>Analíticas</h1><p>Estadísticas avanzadas de tu clínica · Plan Enterprise</p></div>
+    <div style="display:flex;gap:10px">
+      <select class="form-input" style="width:180px">
+        <option>Últimos 30 días</option>
+        <option>Últimos 3 meses</option>
+        <option>Este año</option>
+      </select>
+      <button class="btn btn-ghost btn-sm"><span id="icon-export"></span> Exportar</button>
+    </div>
+  </div>
+
+  <!-- KPIs (sin clientes activos) -->
+  <div class="kpi-row" id="kpi-row"></div>
+
+  <div class="analiticas-grid">
+    <!-- Donut especie -->
+    <div class="card">
+      <div class="card-title"><span id="icon-paw-chart"></span> Pacientes por especie</div>
+      <div class="donut-wrap">
+        <svg class="donut-svg" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="80" cy="80" r="60" fill="none" stroke="var(--bg3)" stroke-width="22"/>
+          <circle cx="80" cy="80" r="60" fill="none" stroke="var(--accent)" stroke-width="22" stroke-dasharray="207.3 376.9" stroke-dashoffset="94.2" transform="rotate(-90 80 80)"/>
+          <circle cx="80" cy="80" r="60" fill="none" stroke="#53B8CA" stroke-width="22" stroke-dasharray="105.6 376.9" stroke-dashoffset="-113.1" transform="rotate(-90 80 80)"/>
+          <circle cx="80" cy="80" r="60" fill="none" stroke="#f0c040" stroke-width="22" stroke-dasharray="45.2 376.9" stroke-dashoffset="-218.7" transform="rotate(-90 80 80)"/>
+          <circle cx="80" cy="80" r="60" fill="none" stroke="#f0a080" stroke-width="22" stroke-dasharray="18.8 376.9" stroke-dashoffset="-263.9" transform="rotate(-90 80 80)"/>
+          <text x="80" y="76" text-anchor="middle" font-size="20" font-weight="800" fill="var(--text)">127</text>
+          <text x="80" y="94" text-anchor="middle" font-size="11" fill="var(--text2)">pacientes</text>
+        </svg>
+        <div class="donut-legend" id="donut-legend"></div>
+      </div>
+    </div>
+
+    <!-- Motivos generales -->
+    <div class="card">
+      <div class="card-title"><span id="icon-steth"></span> Motivos de consulta</div>
+      <div id="motivos-chart"></div>
+    </div>
+
+    <!-- Edad -->
+    <div class="card">
+      <div class="card-title"><span id="icon-cal-chart"></span> Distribución por edad</div>
+      <div class="age-chart" id="age-chart"></div>
+      <div style="margin-top:12px;font-size:13px;color:var(--text2)">
+        Edad media de pacientes: <strong style="color:var(--accent)">4.2 años</strong>
+      </div>
+    </div>
+
+    <!-- Ingresos mensuales -->
+    <div class="card">
+      <div class="card-title"><span id="icon-euro-chart"></span> Ingresos mensuales 2026</div>
+      <div class="monthly-chart" id="monthly-chart"></div>
+      <div style="margin-top:12px;font-size:13px;color:var(--text2)">
+        Total acumulado: <strong style="color:var(--accent)">21,540€</strong>
+        <span style="color:var(--accent);margin-left:10px;font-weight:600">↑ 18% vs 2025</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANALÍTICAS PROFUNDAS POR ESPECIE -->
+  <div style="margin-top:20px">
+    <div class="section-title" style="margin-bottom:16px">Análisis clínico por especie</div>
+    <div class="grid-2" style="gap:16px">
+      <!-- Perros -->
+      <div class="card">
+        <div class="card-title"><span id="icon-dog-chart"></span> Patologías más frecuentes — Perros</div>
+        <div id="dog-conditions"></div>
+      </div>
+      <!-- Gatos -->
+      <div class="card">
+        <div class="card-title"><span id="icon-cat-chart"></span> Patologías más frecuentes — Gatos</div>
+        <div id="cat-conditions"></div>
+      </div>
+    </div>
+
+    <!-- Tratamientos más prescritos -->
+    <div class="card" style="margin-top:16px">
+      <div class="card-title">Tratamientos más prescritos</div>
+      <table class="table">
+        <thead><tr><th>Tratamiento</th><th>Especie</th><th>Nº prescripciones</th></tr></thead>
+        <tbody id="tratamientos-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script src="../../ambos/icons.js"></script>
+<script src="../../ambos/shared.js"></script>
+<script src="../../ambos/layout.js"></script>
+<script src="../scripts/analiticas.js"></script>
+</body>
+</html>

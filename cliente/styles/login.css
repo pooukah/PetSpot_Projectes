@@ -1,0 +1,157 @@
+/* ============ LOGIN PAGE ============ */
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.login-bg {
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at 30% 50%, rgba(109,211,177,0.08) 0%, transparent 60%),
+              radial-gradient(ellipse at 70% 20%, rgba(83,184,202,0.06) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.login-wrap {
+  position: relative; z-index: 1;
+  width: 400px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 34px 32px 28px;
+  box-shadow: var(--shadow);
+}
+
+.login-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 26px;
+}
+.login-logo-icon {
+  width: 44px; height: 44px;
+  background: var(--bg3);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.3s;
+  color: var(--text2);
+}
+body.cliente .login-logo-icon,
+body.veterinario .login-logo-icon { background: var(--accent); border-color: var(--accent); color: #fff; }
+.login-logo-icon svg { width: 26px; height: 26px; }
+.login-logo-name {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text);
+  transition: color 0.3s;
+}
+body.cliente .login-logo-name,
+body.veterinario .login-logo-name { color: var(--accent); }
+
+.login-heading {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.login-sub {
+  font-size: 14px;
+  color: var(--text2);
+  margin-bottom: 22px;
+}
+
+.profile-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+.profile-opt {
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 13px 10px 11px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  background: var(--bg3);
+}
+.profile-opt:hover { border-color: var(--accent); }
+.profile-opt.active {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+.profile-opt-icon {
+  display: flex; align-items: center; justify-content: center;
+  height: 32px; margin-bottom: 6px;
+}
+.profile-opt-icon svg { width: 26px; height: 26px; color: var(--text2); }
+.profile-opt.active .profile-opt-icon svg { color: var(--accent); }
+.profile-opt-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text2);
+}
+.profile-opt.active .profile-opt-label { color: var(--accent); }
+
+.login-btn {
+  width: 100%;
+  justify-content: center;
+  padding: 12px;
+  font-size: 15px;
+  margin-top: 4px;
+  border-radius: 10px;
+  /* Sin perfil seleccionado: color neutro */
+  background: var(--bg3);
+  color: var(--text2);
+  border: 1.5px solid var(--border);
+}
+.login-btn svg { width: 18px; height: 18px; }
+/* Con perfil seleccionado: color de acento */
+body.cliente .login-btn,
+body.veterinario .login-btn {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.login-footer {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text2);
+  margin-top: 18px;
+}
+.login-footer a {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+.login-footer a:hover { text-decoration: underline; }
+
+.login-theme {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--text2);
+}
+.login-theme svg { width: 16px; height: 16px; }
+
+/* Link de "Registrarse" — neutro sin perfil, accent con perfil */
+.login-footer a {
+  color: var(--text2);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+body.cliente .login-footer a,
+body.veterinario .login-footer a { color: var(--accent); }

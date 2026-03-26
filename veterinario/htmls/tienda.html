@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PetSpot — Mi Tienda</title>
+<link rel="stylesheet" href="../../ambos/shared.css">
+<link rel="stylesheet" href="../styles/tienda.css">
+</head>
+<body class="veterinario">
+<div class="main">
+  <div class="page-header">
+    <div><h1>Mi Tienda</h1><p>Gestiona productos y pedidos de tu clínica</p></div>
+    <button class="btn btn-primary" id="btn-nuevo"><span id="icon-plus"></span> Nuevo Producto</button>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('productos',this)">Productos</button>
+    <button class="tab" onclick="showTab('pedidos',this)">Pedidos</button>
+  </div>
+  <!-- PRODUCTOS -->
+  <div id="tab-productos">
+    <div class="card" style="padding:0">
+      <table class="table">
+        <thead><tr><th>Producto</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Ventas</th><th>Acciones</th></tr></thead>
+        <tbody id="productos-body"></tbody>
+      </table>
+    </div>
+  </div>
+  <!-- PEDIDOS -->
+  <div id="tab-pedidos" style="display:none">
+    <div class="card" style="padding:0">
+      <table class="table">
+        <thead><tr><th>Nº Pedido</th><th>Cliente</th><th>Productos</th><th>Total</th><th>Estado</th><th>Fecha</th></tr></thead>
+        <tbody id="pedidos-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal NUEVO producto -->
+<div class="modal-overlay" id="modal-prod">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Nuevo Producto</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()"><span id="icon-x-nuevo"></span></button>
+    </div>
+    <div class="grid-2" style="gap:12px">
+      <div class="form-group"><label class="form-label">Nombre</label><input class="form-input" id="nuevo-nombre" placeholder="Nombre del producto"></div>
+      <div class="form-group"><label class="form-label">Categoría</label>
+        <select class="form-input" id="nuevo-cat">
+          <option>Alimentación</option><option>Salud</option><option>Accesorios</option><option>Higiene</option><option>Juguetes</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Precio (€)</label><input type="number" class="form-input" id="nuevo-precio" placeholder="0.00" step="0.01"></div>
+      <div class="form-group"><label class="form-label">Stock inicial</label><input type="number" class="form-input" id="nuevo-stock" placeholder="0"></div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label class="form-label">Foto del producto</label>
+        <div style="background:var(--bg3);border:2px dashed var(--border);border-radius:var(--radius-sm);padding:20px;text-align:center;font-size:13px;color:var(--text3)">
+          📷 Subida de imagen (próximamente)
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px" onclick="addProduct()">Crear producto</button>
+  </div>
+</div>
+
+<!-- Modal EDITAR producto -->
+<div class="modal-overlay" id="modal-editar">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Editar Producto</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()"><span id="icon-x-editar"></span></button>
+    </div>
+    <div class="grid-2" style="gap:12px">
+      <div class="form-group"><label class="form-label">Nombre</label><input class="form-input" id="edit-nombre"></div>
+      <div class="form-group"><label class="form-label">Categoría</label>
+        <select class="form-input" id="edit-cat">
+          <option>Alimentación</option><option>Salud</option><option>Accesorios</option><option>Higiene</option><option>Juguetes</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Precio (€)</label><input type="number" class="form-input" id="edit-precio" step="0.01"></div>
+      <div class="form-group"><label class="form-label">Stock</label><input type="number" class="form-input" id="edit-stock"></div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label class="form-label">Foto del producto</label>
+        <div style="background:var(--bg3);border:2px dashed var(--border);border-radius:var(--radius-sm);padding:20px;text-align:center;font-size:13px;color:var(--text3)">
+          📷 Subida de imagen (próximamente)
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px" onclick="guardarEdicion()">Guardar cambios</button>
+  </div>
+</div>
+
+<script src="../../ambos/icons.js"></script>
+<script src="../../ambos/shared.js"></script>
+<script src="../../ambos/layout.js"></script>
+<script src="../scripts/tienda.js"></script>
+</body>
+</html>

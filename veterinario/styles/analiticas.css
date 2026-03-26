@@ -1,0 +1,164 @@
+/* ============ VETERINARIO — ANALÍTICAS ============ */
+
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.kpi-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  text-align: center;
+}
+.kpi-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1.1;
+  margin-bottom: 5px;
+}
+.kpi-label {
+  font-size: 12px;
+  color: var(--text2);
+  font-weight: 500;
+}
+
+.analiticas-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Donut */
+.donut-wrap {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-top: 8px;
+}
+.donut-svg {
+  width: 160px;
+  height: 160px;
+  flex-shrink: 0;
+}
+.donut-legend { flex: 1; }
+.legend-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.legend-row:last-child { border-bottom: none; }
+.legend-dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.legend-pct {
+  margin-left: auto;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* Motivos horizontal bar */
+.motivo-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.motivo-label {
+  font-size: 12px;
+  color: var(--text2);
+  width: 110px;
+  flex-shrink: 0;
+}
+.motivo-track {
+  flex: 1;
+  height: 16px;
+  background: var(--bg3);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.motivo-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.6s ease;
+}
+.motivo-val {
+  font-size: 12px;
+  font-weight: 700;
+  width: 28px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* Age chart */
+.age-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 110px;
+  margin-top: 12px;
+}
+.age-bar-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+.age-bar {
+  width: 100%;
+  border-radius: 5px 5px 0 0;
+  transition: height 0.5s ease;
+}
+.age-bar-label {
+  font-size: 11px;
+  color: var(--text3);
+  font-weight: 600;
+}
+
+/* Monthly chart */
+.monthly-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 110px;
+  margin-top: 12px;
+}
+.month-bar-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+.month-bar {
+  width: 100%;
+  border-radius: 5px 5px 0 0;
+  background: var(--accent-light);
+  border-top: 2px solid var(--accent);
+  transition: height 0.5s ease;
+}
+.month-bar.current {
+  background: var(--accent);
+  border-top-color: var(--accent-dark);
+}
+.month-label {
+  font-size: 11px;
+  color: var(--text3);
+  font-weight: 600;
+}
+.month-value {
+  font-size: 10px;
+  color: var(--accent);
+  font-weight: 700;
+}

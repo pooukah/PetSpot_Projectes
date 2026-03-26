@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PetSpot — Mi Perfil</title>
+<link rel="stylesheet" href="../../ambos/shared.css">
+<link rel="stylesheet" href="../styles/perfil.css">
+</head>
+<body class="veterinario">
+<div class="main">
+  <div class="page-header">
+    <div><h1>Mi Perfil</h1><p>Gestiona tu cuenta y configuración</p></div>
+  </div>
+
+  <!-- Solo un apartado: datos + configuración + contraseña -->
+  <div class="card">
+    <div class="vet-profile-top">
+      <div class="vet-avatar-wrap">
+        <div class="vet-avatar" id="vet-av">C</div>
+        <button class="avatar-edit-btn"><span id="icon-edit-av"></span></button>
+      </div>
+      <div class="vet-profile-info">
+        <div class="vet-name" id="vet-name">Dra. Carmen García</div>
+        <div class="vet-email" id="vet-email">dr.garcia@vetpro.es</div>
+        <div class="vet-clinic"><span id="icon-pin"></span> <span id="vet-clinic-name">Clínica VetPro</span></div>
+        <div class="vet-specs" id="vet-specs"></div>
+      </div>
+    </div>
+
+    <div class="grid-2" style="gap:14px">
+      <div class="form-group"><label class="form-label">Nombre completo</label><input class="form-input" id="input-nombre" placeholder="Tu nombre completo"></div>
+      <div class="form-group"><label class="form-label">Nº Colegiado</label><input class="form-input" value="COVB-4892"></div>
+      <div class="form-group"><label class="form-label">Correo electrónico</label><input class="form-input" id="input-email" placeholder="correo@email.com"></div>
+      <div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="input-tel" value="+34 932 456 789"></div>
+      <div class="form-group"><label class="form-label">Especialidad principal</label>
+        <select class="form-input">
+          <option selected>Cirugía</option>
+          <option>Medicina interna</option>
+          <option>Dermatología</option>
+          <option>Odontología</option>
+          <option>Oncología</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Años de experiencia</label><input class="form-input" type="number" value="12"></div>
+    </div>
+    <button class="btn btn-primary" style="margin-top:10px" onclick="guardarDatos()">Guardar cambios</button>
+  </div>
+
+  <!-- Notificaciones -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">Notificaciones</div>
+    <div id="notif-list"></div>
+  </div>
+
+  <!-- Cambiar contraseña + 2FA -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-title">Seguridad</div>
+    <div class="grid-2" style="gap:14px;margin-bottom:14px">
+      <div class="form-group"><label class="form-label">Contraseña actual</label><input type="password" class="form-input" id="pass-actual" placeholder="••••••••"></div>
+      <div class="form-group" style="align-self:flex-end"><!-- Spacer --></div>
+      <div class="form-group"><label class="form-label">Nueva contraseña</label><input type="password" class="form-input" id="pass-nueva" placeholder="••••••••"></div>
+      <div class="form-group"><label class="form-label">Confirmar nueva contraseña</label><input type="password" class="form-input" id="pass-confirmar" placeholder="••••••••"></div>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="cambiarPassword()">Cambiar contraseña</button>
+    <div class="divider"></div>
+    <div class="notif-row">
+      <div>
+        <div style="font-size:14px;font-weight:600">Autenticación 2FA</div>
+        <div style="font-size:12px;color:var(--text2)">Código SMS al iniciar sesión</div>
+      </div>
+      <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+    </div>
+  </div>
+</div>
+<script src="../../ambos/icons.js"></script>
+<script src="../../ambos/shared.js"></script>
+<script src="../../ambos/layout.js"></script>
+<script src="../scripts/perfil.js"></script>
+</body>
+</html>

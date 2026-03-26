@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PetSpot — Acceder</title>
+<link rel="stylesheet" href="ambos/shared.css">
+<link rel="stylesheet" href="cliente/styles/login.css">
+</head>
+<body>
+
+<div class="login-bg"></div>
+
+<div class="login-wrap">
+  <!-- Logo neutral al principio -->
+  <div class="login-logo">
+    <div class="login-logo-icon" id="logo-icon"></div>
+    <span class="login-logo-name" id="logo-name">PetSpot</span>
+  </div>
+
+  <h2 class="login-heading">Bienvenido</h2>
+  <p class="login-sub">Selecciona tu perfil para continuar</p>
+
+  <!-- Selector de perfil -->
+  <div class="profile-selector">
+    <div class="profile-opt" id="opt-cliente" onclick="seleccionarPerfil('cliente')">
+      <div class="profile-opt-icon" id="icon-cliente"></div>
+      <div class="profile-opt-label">Cliente</div>
+    </div>
+    <div class="profile-opt" id="opt-vet" onclick="seleccionarPerfil('veterinario')">
+      <div class="profile-opt-icon" id="icon-vet"></div>
+      <div class="profile-opt-label">Veterinario</div>
+    </div>
+  </div>
+
+  <!-- Formulario -->
+  <div class="form-group">
+    <label class="form-label">Correo electrónico</label>
+    <input type="email" class="form-input" id="email" placeholder="usuario@petspot.es">
+  </div>
+  <div class="form-group">
+    <label class="form-label">Contraseña</label>
+    <input type="password" class="form-input" id="pass" placeholder="••••••••" onkeydown="if(event.key==='Enter') iniciarSesion()">
+  </div>
+
+  <button class="btn btn-primary login-btn" id="btn-login" onclick="iniciarSesion()">
+    Iniciar sesión
+  </button>
+
+  <div class="login-footer">
+    ¿No tienes cuenta? <a href="registro.html">Regístrate gratis</a>
+  </div>
+
+  <!-- Toggle tema -->
+  <div class="login-theme">
+    <span id="login-theme-icon"></span>
+    <div class="toggle-switch" id="login-theme-toggle"></div>
+  </div>
+</div>
+
+<script src="ambos/icons.js"></script>
+<script src="ambos/shared.js"></script>
+<script src="cliente/scripts/login.js"></script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PetSpot — Registro</title>
+<link rel="stylesheet" href="ambos/shared.css">
+<link rel="stylesheet" href="cliente/styles/login.css">
+<link rel="stylesheet" href="cliente/styles/registro.css">
+</head>
+<body>
+
+<div class="login-bg"></div>
+
+<div class="login-wrap" style="width:460px">
+  <div class="login-logo">
+    <div class="login-logo-icon" id="logo-icon"></div>
+    <span class="login-logo-name" id="logo-name">PetSpot</span>
+  </div>
+
+  <h2 class="login-heading">Crear cuenta</h2>
+  <p class="login-sub">Elige tu perfil y rellena tus datos</p>
+
+  <!-- Selector de perfil -->
+  <div class="profile-selector" style="margin-bottom:18px">
+    <div class="profile-opt" id="opt-cliente" onclick="seleccionarPerfil('cliente')">
+      <div class="profile-opt-icon" id="icon-cliente"></div>
+      <div class="profile-opt-label">Cliente</div>
+    </div>
+    <div class="profile-opt" id="opt-vet" onclick="seleccionarPerfil('veterinario')">
+      <div class="profile-opt-icon" id="icon-vet"></div>
+      <div class="profile-opt-label">Veterinario</div>
+    </div>
+  </div>
+
+  <!-- Campos comunes -->
+  <div class="grid-2" style="gap:12px">
+    <div class="form-group"><label class="form-label">Nombre</label><input class="form-input" id="reg-nombre" placeholder="Tu nombre"></div>
+    <div class="form-group"><label class="form-label">Apellidos</label><input class="form-input" id="reg-apellidos" placeholder="Tus apellidos"></div>
+  </div>
+  <div class="form-group"><label class="form-label">Correo electrónico</label><input type="email" class="form-input" id="reg-email" placeholder="correo@ejemplo.es"></div>
+  <div class="form-group"><label class="form-label">Teléfono</label><input type="tel" class="form-input" id="reg-tel" placeholder="+34 600 000 000"></div>
+  <div class="grid-2" style="gap:12px">
+    <div class="form-group"><label class="form-label">Contraseña</label><input type="password" class="form-input" id="reg-pass" placeholder="••••••••"></div>
+    <div class="form-group"><label class="form-label">Confirmar</label><input type="password" class="form-input" id="reg-pass2" placeholder="••••••••"></div>
+  </div>
+
+  <!-- Campos extra para veterinario (ocultos por defecto) -->
+  <div id="vet-fields" style="display:none">
+    <div class="divider"></div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:14px">
+      Indica la clínica donde trabajas. Solo las clínicas registradas en PetSpot aparecen en el listado.
+    </p>
+    <div class="form-group">
+      <label class="form-label">Clínica veterinaria</label>
+      <select class="form-input" id="reg-clinica" onchange="comprobarClinica()">
+        <option value="">— Selecciona tu clínica —</option>
+        <option value="Clínica VetPro">Clínica VetPro</option>
+        <option value="VetSalut Barcelona">VetSalut Barcelona</option>
+        <option value="AnimaCare Vet">AnimaCare Vet</option>
+        <option value="Hospital Veterinari BCN">Hospital Veterinari BCN</option>
+        <option value="no-encuentro">No encuentro mi clínica</option>
+      </select>
+    </div>
+
+    <!-- Mensaje si no encuentra la clínica -->
+    <div id="msg-no-clinica" style="display:none">
+      <div class="info-banner" style="background:rgba(255,165,0,0.1);border-color:rgba(255,165,0,0.4)">
+        <div style="font-size:14px;font-weight:700;color:#ffa500;margin-bottom:6px">¿Eres propietario de una clínica?</div>
+        <p style="font-size:13px;color:var(--text2)">
+          Para registrar tu clínica en PetSpot, contáctanos y te daremos de alta:<br>
+          <strong style="color:var(--text)">📧 alta@petspot.es</strong><br>
+          <strong style="color:var(--text)">📞 +34 900 123 456</strong>
+        </p>
+        <p style="font-size:12px;color:var(--text3);margin-top:8px">
+          Los veterinarios que trabajan en clínicas no registradas no pueden crear cuenta hasta que la clínica esté dada de alta.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn btn-primary login-btn" id="btn-registro" onclick="registrarse()">
+    Crear cuenta
+  </button>
+
+  <div class="login-footer">
+    ¿Ya tienes cuenta? <a href="index.html">Inicia sesión</a>
+  </div>
+
+  <!-- Toggle tema -->
+  <div class="login-theme">
+    <span id="login-theme-icon"></span>
+    <div class="toggle-switch" id="login-theme-toggle"></div>
+  </div>
+</div>
+
+<script src="ambos/icons.js"></script>
+<script src="ambos/shared.js"></script>
+<script src="cliente/scripts/registro.js"></script>
+</body>
+</html>
