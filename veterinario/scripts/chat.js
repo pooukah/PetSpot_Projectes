@@ -1,6 +1,5 @@
 // PetSpot — Chat del veterinario
-// Los veterinarios pueden buscar clientes por Gmail/email
-// Sin respuesta automática — preparado para conectar a API
+// Mensajes en tiempo real con Firestore
 
 PetSpot.init('veterinario');
 buildVetLayout('chat');
@@ -8,20 +7,17 @@ buildVetLayout('chat');
 ponerIcono(document.getElementById('icon-search'), Icons.search);
 ponerIcono(document.getElementById('btn-send'),    Icons.send);
 
-// ── Chat activo ──
 var chatActivo = null;
+var unsubscribeChat = null;
 
-// ── Conversaciones guardadas ──
 var conversaciones = Almacen.cargar('chat_convs_vet');
 if (!Array.isArray(conversaciones) || conversaciones.length === 0) {
-  // Solo el chat de bienvenida al inicio
   conversaciones = [
     { id: 1, nombre: 'PetSpot', rol: 'Sistema', ultimo: 'Bienvenido al chat de PetSpot.' }
   ];
   Almacen.guardar('chat_convs_vet', conversaciones);
 }
 
-// ── Mensajes persistentes por chat ──
 function getMensajes(chatId) {
   var raw = localStorage.getItem(Almacen.clave('vmsg_' + chatId));
   if (raw) return JSON.parse(raw);
@@ -36,14 +32,99 @@ function guardarMensajes(chatId, msgs) {
 }
 
 // ============================================================
-// BUSCAR CLIENTE POR EMAIL (Gmail o cualquier correo)
+// FIRESTORE CHAT
+// ============================================================
+function getFirestoreChatId(chatId) {
+  var user = PetSpot.getUser();
+  if (!user || !user.uid) return null;
+  return user.uid + '_vchat_' + chatId;
+}
+
+function enviarMensajeFirestore(chatId, texto, hora) {
+  if (typeof db === 'undefined') return;
+  var user = PetSpot.getUser();
+  if (!user || !user.uid) return;
+  var firestoreChatId = getFirestoreChatId(chatId);
+  if (!firestoreChatId) return;
+
+  db.collection('chats').doc(firestoreChatId).collection('messages').add({
+    texto: texto,
+    hora: hora,
+    tipo: 'sent',
+    senderUid: user.uid,
+    senderName: user.nombre,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+  }).catch(function(err) {
+    console.warn('Error enviando mensaje a Firestore:', err);
+  });
+}
+
+function escucharMensajesFirestore(chatId) {
+  if (typeof db === 'undefined') return;
+  var user = PetSpot.getUser();
+  if (!user || !user.uid) return;
+
+  if (unsubscribeChat) {
+    unsubscribeChat();
+    unsubscribeChat = null;
+  }
+
+  var firestoreChatId = getFirestoreChatId(chatId);
+  if (!firestoreChatId) return;
+
+  unsubscribeChat = db.collection('chats').doc(firestoreChatId)
+    .collection('messages')
+    .orderBy('timestamp', 'asc')
+    .onSnapshot(function(snapshot) {
+      var contenedor = document.getElementById('chat-messages');
+      if (!contenedor) return;
+      while (contenedor.firstChild) contenedor.removeChild(contenedor.firstChild);
+
+      snapshot.forEach(function(doc) {
+        var msg = doc.data();
+        contenedor.appendChild(crearBurbuja(msg.texto, msg.hora, msg.tipo));
+      });
+      contenedor.scrollTop = contenedor.scrollHeight;
+    }, function(err) {
+      console.warn('Error escuchando mensajes:', err);
+    });
+}
+
+// ============================================================
+// BUSCAR CLIENTE POR EMAIL
 // ============================================================
 function buscarCliente() {
   var input = document.getElementById('search-email');
   var email = input.value.trim().toLowerCase();
   if (!email) return;
 
-  // Buscar en la lista de clientes conocidos
+  // Buscar en Firestore primero, luego en MockData
+  if (typeof db !== 'undefined') {
+    db.collection('users').where('email', '==', email).where('tipo', '==', 'cliente').get()
+      .then(function(querySnapshot) {
+        if (!querySnapshot.empty) {
+          var doc = querySnapshot.docs[0];
+          var data = doc.data();
+          abrirOCrearConversacion({
+            nombre: data.nombre,
+            email: data.email,
+            mascotas: data.mascotas ? data.mascotas.map(function(m) { return m.nombre + ' (' + m.especie + ')'; }) : []
+          });
+        } else {
+          buscarEnMockData(email);
+        }
+      })
+      .catch(function(err) {
+        console.warn('Error buscando en Firestore:', err);
+        buscarEnMockData(email);
+      });
+  } else {
+    buscarEnMockData(email);
+  }
+  input.value = '';
+}
+
+function buscarEnMockData(email) {
   var clienteEncontrado = null;
   for (var i = 0; i < MockData.clientes.length; i++) {
     if (MockData.clientes[i].email.toLowerCase() === email ||
@@ -58,11 +139,13 @@ function buscarCliente() {
     return;
   }
 
-  // Comprobar si ya existe una conversación con este cliente
+  abrirOCrearConversacion(clienteEncontrado);
+}
+
+function abrirOCrearConversacion(cliente) {
   var yaExiste = false;
   for (var i = 0; i < conversaciones.length; i++) {
-    if (conversaciones[i].email === clienteEncontrado.email) {
-      // Ya existe — abrir directamente
+    if (conversaciones[i].email === cliente.email) {
       abrirChat(conversaciones[i].id);
       yaExiste = true;
       break;
@@ -70,22 +153,20 @@ function buscarCliente() {
   }
 
   if (!yaExiste) {
-    // Crear nueva conversación
+    var mascotasTexto = Array.isArray(cliente.mascotas) ? cliente.mascotas.join(', ') : '';
     var nuevaConv = {
       id:     Date.now(),
-      nombre: clienteEncontrado.nombre,
-      rol:    clienteEncontrado.mascotas.join(', '),
-      email:  clienteEncontrado.email,
+      nombre: cliente.nombre,
+      rol:    mascotasTexto,
+      email:  cliente.email,
       ultimo: 'Nueva conversación'
     };
     conversaciones.push(nuevaConv);
     Almacen.guardar('chat_convs_vet', conversaciones);
     construirListaChats();
     abrirChat(nuevaConv.id);
-    PetSpot.notify('✅ Chat iniciado con ' + clienteEncontrado.nombre);
+    PetSpot.notify('Chat iniciado con ' + cliente.nombre);
   }
-
-  input.value = '';
 }
 
 // ============================================================
@@ -161,6 +242,8 @@ function abrirChat(id) {
     contenedor.appendChild(crearBurbuja(msgs[i].texto, msgs[i].hora, msgs[i].tipo));
   }
   contenedor.scrollTop = contenedor.scrollHeight;
+
+  escucharMensajesFirestore(id);
 }
 
 // ============================================================
@@ -190,6 +273,8 @@ function sendMsg() {
   var msgs = getMensajes(chatActivo);
   msgs.push({ texto: texto, hora: hora, tipo: 'sent' });
   guardarMensajes(chatActivo, msgs);
+
+  enviarMensajeFirestore(chatActivo, texto, hora);
 
   for (var i = 0; i < conversaciones.length; i++) {
     if (conversaciones[i].id === chatActivo) {

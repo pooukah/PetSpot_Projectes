@@ -1,13 +1,7 @@
-// PetSpot — Login
+// PetSpot — Login con Firebase Auth
 
 // Al principio no hay perfil seleccionado
 var perfilSeleccionado = null;
-
-// Datos de prueba para los dos perfiles
-var datosPrueba = {
-  cliente:     { nombre: 'María Fernández', email: 'maria@email.com',       direccion: 'Carrer de Balmes, 42, 3º Barcelona 08007' },
-  veterinario: { nombre: 'Carmen García',   email: 'dr.garcia@vetpro.es',   clinica: 'Clínica VetPro', direccion: 'Carrer de Balmes, 120 Barcelona' }
-};
 
 function seleccionarPerfil(tipo) {
   perfilSeleccionado = tipo;
@@ -19,9 +13,6 @@ function seleccionarPerfil(tipo) {
   // Marcar el botón activo
   document.getElementById('opt-cliente').classList.toggle('active', tipo === 'cliente');
   document.getElementById('opt-vet').classList.toggle('active', tipo === 'veterinario');
-
-  // Poner el email de prueba
-  document.getElementById('email').value = datosPrueba[tipo].email;
 }
 
 function iniciarSesion() {
@@ -32,28 +23,82 @@ function iniciarSesion() {
   }
 
   var email = document.getElementById('email').value.trim();
+  var pass  = document.getElementById('pass').value;
+
   if (!email) {
     PetSpot.notify('Introduce tu correo electrónico');
     return;
   }
-
-  // Guardar datos del usuario en la sesión
-  var datos = datosPrueba[perfilSeleccionado];
-  var usuario = {
-    tipo:      perfilSeleccionado,
-    nombre:    datos.nombre,
-    email:     datos.email,
-    clinica:   datos.clinica || '',
-    direccion: datos.direccion || ''
-  };
-  PetSpot.setUser(usuario);
-
-  // Redirigir a la página correspondiente
-  if (perfilSeleccionado === 'cliente') {
-    window.location.href = 'cliente/htmls/inicio.html';
-  } else {
-    window.location.href = 'veterinario/htmls/inicio.html';
+  if (!pass) {
+    PetSpot.notify('Introduce tu contraseña');
+    return;
   }
+
+  // Deshabilitar el botón mientras se procesa
+  var btnLogin = document.getElementById('btn-login');
+  if (btnLogin) {
+    btnLogin.disabled = true;
+    btnLogin.textContent = 'Iniciando sesión...';
+  }
+
+  // Firebase Auth — iniciar sesión con email y contraseña
+  auth.signInWithEmailAndPassword(email, pass)
+    .then(function(userCredential) {
+      var firebaseUser = userCredential.user;
+
+      // Cargar datos del usuario desde Firestore
+      return db.collection('users').doc(firebaseUser.uid).get().then(function(doc) {
+        var userData = doc.exists ? doc.data() : {};
+
+        // Verificar que el tipo de perfil coincide
+        if (userData.tipo && userData.tipo !== perfilSeleccionado) {
+          PetSpot.notify('Esta cuenta está registrada como ' + userData.tipo);
+          auth.signOut();
+          if (btnLogin) {
+            btnLogin.disabled = false;
+            btnLogin.textContent = 'Iniciar sesión';
+          }
+          return;
+        }
+
+        // Guardar datos del usuario en la sesión
+        var usuario = {
+          uid:       firebaseUser.uid,
+          tipo:      userData.tipo || perfilSeleccionado,
+          nombre:    userData.nombre || firebaseUser.displayName || email.split('@')[0],
+          email:     firebaseUser.email,
+          clinica:   userData.clinica || '',
+          direccion: userData.direccion || '',
+          telefono:  userData.telefono || ''
+        };
+        PetSpot.setUser(usuario);
+
+        // Redirigir a la página correspondiente
+        if (usuario.tipo === 'cliente') {
+          window.location.href = 'cliente/htmls/inicio.html';
+        } else {
+          window.location.href = 'veterinario/htmls/inicio.html';
+        }
+      });
+    })
+    .catch(function(error) {
+      if (btnLogin) {
+        btnLogin.disabled = false;
+        btnLogin.textContent = 'Iniciar sesión';
+      }
+      var msg = 'Error al iniciar sesión';
+      if (error.code === 'auth/user-not-found') {
+        msg = 'No existe una cuenta con este correo';
+      } else if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        msg = 'Contraseña incorrecta';
+      } else if (error.code === 'auth/invalid-email') {
+        msg = 'El correo electrónico no es válido';
+      } else if (error.code === 'auth/too-many-requests') {
+        msg = 'Demasiados intentos. Espera unos minutos';
+      }
+      PetSpot.notify(msg);
+      console.warn('Login error:', error.code, error.message);
+    });
 }
 
 // ── Al cargar la página ──
@@ -74,6 +119,20 @@ function iniciarSesion() {
   document.getElementById('login-theme-toggle').addEventListener('click', function() {
     PetSpot.toggleTheme();
     actualizarIconoTema();
+  });
+
+  // Si el usuario ya tiene sesión de Firebase activa, redirigir
+  auth.onAuthStateChanged(function(firebaseUser) {
+    if (firebaseUser) {
+      var sessionUser = PetSpot.getUser();
+      if (sessionUser && sessionUser.uid === firebaseUser.uid) {
+        if (sessionUser.tipo === 'cliente') {
+          window.location.href = 'cliente/htmls/inicio.html';
+        } else {
+          window.location.href = 'veterinario/htmls/inicio.html';
+        }
+      }
+    }
   });
 })();
 

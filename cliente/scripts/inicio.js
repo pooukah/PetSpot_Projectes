@@ -1,8 +1,13 @@
 // PetSpot — Inicio del cliente
-// Estado inicial vacío — las citas y mascotas vienen de localStorage
+// Estado inicial vacío — las citas y mascotas vienen de localStorage/Firestore
 
 PetSpot.init('cliente');
 buildClienteLayout('inicio');
+
+// Cargar datos desde Firestore al iniciar
+PetSpot.loadUserFromFirestore(function() {
+  renderInicio();
+});
 
 // ── Fecha actual ──
 var dias  = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
@@ -21,33 +26,35 @@ ponerIcono(document.getElementById('qi-tienda'), Icons.shop);
 ponerIcono(document.getElementById('icon-cal'),  Icons.calendar);
 ponerIcono(document.getElementById('icon-paw'),  Icons.paw);
 
-// ── Próximas citas (desde localStorage) ──
-var citasList = document.getElementById('citas-list');
-
-// Cargar citas guardadas del usuario
-var todasLasCitas = Almacen.cargar('citas');
-// Filtrar solo las que no están completadas o canceladas
-var proximas = [];
-for (var i = 0; i < todasLasCitas.length; i++) {
-  if (todasLasCitas[i].estado !== 'completada' && todasLasCitas[i].estado !== 'cancelada') {
-    proximas.push(todasLasCitas[i]);
-  }
+// ── Render principal (se llama tras cargar Firestore) ──
+function renderInicio() {
+  renderCitasInicio();
+  renderMascotasInicio();
 }
-proximas = proximas.slice(0, 3); // Mostrar solo las 3 primeras
 
-if (proximas.length === 0) {
-  // Mensaje vacío
-  var msgVacio = crearEl('p', {
-    className: '',
-    textContent: 'No tienes citas próximas',
-    style: { textAlign: 'center', color: 'var(--text3)', padding: '20px', fontSize: '13px' }
-  });
-  citasList.appendChild(msgVacio);
-} else {
-  // Crear una tarjeta por cada cita
-  for (var i = 0; i < proximas.length; i++) {
-    var c = proximas[i];
-    citasList.appendChild(crearTarjetaCita(c));
+// ── Próximas citas (desde localStorage/Firestore) ──
+function renderCitasInicio() {
+  var citasList = document.getElementById('citas-list');
+  while (citasList.firstChild) citasList.removeChild(citasList.firstChild);
+
+  var todasLasCitas = Almacen.cargar('citas');
+  var proximas = [];
+  for (var i = 0; i < todasLasCitas.length; i++) {
+    if (todasLasCitas[i].estado !== 'completada' && todasLasCitas[i].estado !== 'cancelada') {
+      proximas.push(todasLasCitas[i]);
+    }
+  }
+  proximas = proximas.slice(0, 3);
+
+  if (proximas.length === 0) {
+    citasList.appendChild(crearEl('p', {
+      textContent: 'No tienes citas próximas',
+      style: { textAlign: 'center', color: 'var(--text3)', padding: '20px', fontSize: '13px' }
+    }));
+  } else {
+    for (var i = 0; i < proximas.length; i++) {
+      citasList.appendChild(crearTarjetaCita(proximas[i]));
+    }
   }
 }
 
@@ -89,23 +96,29 @@ function crearTarjetaCita(c) {
   return card;
 }
 
-// ── Mascotas (desde localStorage) ──
-var mascotasList = document.getElementById('mascotas-list');
-var misMascotas  = Almacen.cargar('mascotas');
-var petIcons     = { dog: Icons.dog, cat: Icons.cat, rabbit: Icons.rabbit };
+// ── Mascotas (desde localStorage/Firestore) ──
+var petIcons = { dog: Icons.dog, cat: Icons.cat, rabbit: Icons.rabbit };
 
-if (misMascotas.length === 0) {
-  var msgVacioM = crearEl('p', {
-    textContent: 'Aún no has añadido mascotas',
-    style: { textAlign: 'center', color: 'var(--text3)', padding: '16px', fontSize: '13px', gridColumn: '1 / -1' }
-  });
-  mascotasList.appendChild(msgVacioM);
-} else {
-  for (var i = 0; i < misMascotas.length; i++) {
-    var m = misMascotas[i];
-    mascotasList.appendChild(crearTarjetaMascota(m));
+function renderMascotasInicio() {
+  var mascotasList = document.getElementById('mascotas-list');
+  while (mascotasList.firstChild) mascotasList.removeChild(mascotasList.firstChild);
+
+  var misMascotas = Almacen.cargar('mascotas');
+
+  if (misMascotas.length === 0) {
+    mascotasList.appendChild(crearEl('p', {
+      textContent: 'Aún no has añadido mascotas',
+      style: { textAlign: 'center', color: 'var(--text3)', padding: '16px', fontSize: '13px', gridColumn: '1 / -1' }
+    }));
+  } else {
+    for (var i = 0; i < misMascotas.length; i++) {
+      mascotasList.appendChild(crearTarjetaMascota(misMascotas[i]));
+    }
   }
 }
+
+// Render inicial con datos locales (Firestore callback los actualizará)
+renderInicio();
 
 // ── Función para crear una tarjeta de mascota ──
 function crearTarjetaMascota(m) {

@@ -1,6 +1,5 @@
 // PetSpot — Chat del cliente
-// El estado de mensajes no leídos persiste en localStorage
-// Sin respuesta automática — preparado para conectar a API
+// Mensajes en tiempo real con Firestore
 
 PetSpot.init('cliente');
 buildClienteLayout('chat');
@@ -10,42 +9,26 @@ ponerIcono(document.getElementById('btn-send'),    Icons.send);
 
 // ── Chat activo actualmente ──
 var chatActivo = null;
-
-// ── Estado de mensajes no leídos (persistente) ──
-// Usamos localStorage para que si vuelves a la página, siga marcado
-var estadoNoLeidos = Almacen.cargar('chat_unread');
-// Por defecto, si nunca se ha cargado, empezamos con cero de todo
-if (estadoNoLeidos.length === 0) {
-  estadoNoLeidos = {};
-}
-// Asegurarnos de que es un objeto y no un array vacío
-if (Array.isArray(estadoNoLeidos)) {
-  estadoNoLeidos = {};
-}
+var unsubscribeChat = null; // Listener de Firestore en tiempo real
 
 // ── Lista de conversaciones ──
-// Empezamos con solo el mensaje de bienvenida de PetSpot
 var conversaciones = Almacen.cargar('chat_convs');
 if (conversaciones.length === 0) {
-  // Estado inicial: solo el chat de bienvenida
   conversaciones = [
     { id: 1, nombre: 'PetSpot', rol: 'Bienvenida', ultimo: '¡Hola! Te damos la bienvenida a PetSpot.' }
   ];
   Almacen.guardar('chat_convs', conversaciones);
 }
-// chat_convs también puede ser array vacío devuelto como array
 if (!Array.isArray(conversaciones)) conversaciones = [];
 
-// ── Mensajes de cada chat (persistentes) ──
-// Los mensajes de cada conversación se guardan por separado
+// ── Mensajes de cada chat ──
 function getMensajes(chatId) {
   var clave  = 'chat_msgs_' + chatId;
   var raw    = localStorage.getItem(Almacen.clave(clave));
   if (raw) return JSON.parse(raw);
-  // Mensajes iniciales del chat de bienvenida
   if (chatId === 1) {
     return [
-      { texto: '¡Hola! 👋 Bienvenido/a a PetSpot. Aquí podrás chatear con tu veterinario.', hora: '09:00', tipo: 'recv' }
+      { texto: '¡Hola! Bienvenido/a a PetSpot. Aquí podrás chatear con tu veterinario.', hora: '09:00', tipo: 'recv' }
     ];
   }
   return [];
@@ -54,6 +37,66 @@ function getMensajes(chatId) {
 function guardarMensajes(chatId, msgs) {
   var clave = 'chat_msgs_' + chatId;
   localStorage.setItem(Almacen.clave(clave), JSON.stringify(msgs));
+}
+
+// ============================================================
+// FIRESTORE CHAT - enviar y escuchar mensajes en tiempo real
+// ============================================================
+function getFirestoreChatId(chatId) {
+  var user = PetSpot.getUser();
+  if (!user || !user.uid) return null;
+  return user.uid + '_chat_' + chatId;
+}
+
+function enviarMensajeFirestore(chatId, texto, hora) {
+  if (typeof db === 'undefined') return;
+  var user = PetSpot.getUser();
+  if (!user || !user.uid) return;
+  var firestoreChatId = getFirestoreChatId(chatId);
+  if (!firestoreChatId) return;
+
+  db.collection('chats').doc(firestoreChatId).collection('messages').add({
+    texto: texto,
+    hora: hora,
+    tipo: 'sent',
+    senderUid: user.uid,
+    senderName: user.nombre,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+  }).catch(function(err) {
+    console.warn('Error enviando mensaje a Firestore:', err);
+  });
+}
+
+function escucharMensajesFirestore(chatId) {
+  if (typeof db === 'undefined') return;
+  var user = PetSpot.getUser();
+  if (!user || !user.uid) return;
+
+  // Cancelar listener anterior
+  if (unsubscribeChat) {
+    unsubscribeChat();
+    unsubscribeChat = null;
+  }
+
+  var firestoreChatId = getFirestoreChatId(chatId);
+  if (!firestoreChatId) return;
+
+  unsubscribeChat = db.collection('chats').doc(firestoreChatId)
+    .collection('messages')
+    .orderBy('timestamp', 'asc')
+    .onSnapshot(function(snapshot) {
+      var contenedor = document.getElementById('chat-messages');
+      if (!contenedor) return;
+      while (contenedor.firstChild) contenedor.removeChild(contenedor.firstChild);
+
+      snapshot.forEach(function(doc) {
+        var msg = doc.data();
+        contenedor.appendChild(crearBurbuja(msg.texto, msg.hora, msg.tipo));
+      });
+      contenedor.scrollTop = contenedor.scrollHeight;
+    }, function(err) {
+      console.warn('Error escuchando mensajes:', err);
+    });
 }
 
 // ============================================================
@@ -74,14 +117,12 @@ function construirItemChat(c) {
   var el = crearEl('div', { className: 'chat-item' + (c.id === chatActivo ? ' active' : '') });
   el.dataset.id = c.id;
 
-  // Avatar con inicial
   var av = crearEl('div', {
     className: 'topbar-avatar',
     textContent: c.nombre[0],
     style: { width: '38px', height: '38px', fontSize: '15px', flexShrink: '0', borderRadius: '50%' }
   });
 
-  // Info del chat
   var infoDiv = document.createElement('div');
   infoDiv.style.flex = '1';
   infoDiv.style.minWidth = '0';
@@ -100,12 +141,10 @@ function construirItemChat(c) {
   el.appendChild(av);
   el.appendChild(infoDiv);
 
-  // Click para abrir el chat
   el.addEventListener('click', crearHandlerChatClick(c.id));
   return el;
 }
 
-// Función auxiliar para el closure del click
 function crearHandlerChatClick(id) {
   return function() { abrirChat(id); };
 }
@@ -116,13 +155,11 @@ function crearHandlerChatClick(id) {
 function abrirChat(id) {
   chatActivo = id;
 
-  // Marcar el item activo en la lista
   var items = document.querySelectorAll('.chat-item');
   for (var i = 0; i < items.length; i++) {
     items[i].classList.toggle('active', parseInt(items[i].dataset.id) === id);
   }
 
-  // Actualizar cabecera del chat
   var conv = null;
   for (var i = 0; i < conversaciones.length; i++) {
     if (conversaciones[i].id === id) { conv = conversaciones[i]; break; }
@@ -132,7 +169,7 @@ function abrirChat(id) {
   document.getElementById('chat-name').textContent = conv.nombre;
   document.getElementById('chat-av').textContent   = conv.nombre[0];
 
-  // Cargar los mensajes del chat
+  // Cargar mensajes locales primero
   var msgs      = getMensajes(id);
   var contenedor = document.getElementById('chat-messages');
   while (contenedor.firstChild) contenedor.removeChild(contenedor.firstChild);
@@ -141,6 +178,9 @@ function abrirChat(id) {
     contenedor.appendChild(crearBurbuja(msgs[i].texto, msgs[i].hora, msgs[i].tipo));
   }
   contenedor.scrollTop = contenedor.scrollHeight;
+
+  // Activar listener de Firestore para mensajes en tiempo real
+  escucharMensajesFirestore(id);
 }
 
 // ============================================================
@@ -176,6 +216,9 @@ function sendMsg() {
   msgs.push({ texto: texto, hora: hora, tipo: 'sent' });
   guardarMensajes(chatActivo, msgs);
 
+  // Enviar a Firestore
+  enviarMensajeFirestore(chatActivo, texto, hora);
+
   // Actualizar el último mensaje de la conversación
   for (var i = 0; i < conversaciones.length; i++) {
     if (conversaciones[i].id === chatActivo) {
@@ -186,7 +229,6 @@ function sendMsg() {
   Almacen.guardar('chat_convs', conversaciones);
 
   input.value = '';
-  // Sin respuesta automática — preparado para API
 }
 
 // ── Render inicial ──

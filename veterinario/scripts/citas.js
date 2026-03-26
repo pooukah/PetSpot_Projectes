@@ -1,8 +1,14 @@
 // PetSpot — Citas del veterinario
-// Las citas se guardan en localStorage
+// Las citas se guardan en localStorage + Firestore
 
 PetSpot.init('veterinario');
 buildVetLayout('citas');
+
+// Cargar datos desde Firestore al iniciar
+PetSpot.loadUserFromFirestore(function() {
+  listaCitas = Almacen.cargar('citas_vet');
+  filtrarYRenderizar();
+});
 
 ponerIcono(document.getElementById('icon-plus'),   Icons.plus);
 ponerIcono(document.getElementById('icon-search'), Icons.search);

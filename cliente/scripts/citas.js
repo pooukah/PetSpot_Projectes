@@ -1,8 +1,15 @@
 // PetSpot — Citas del cliente
-// Las citas se guardan en localStorage — persisten entre recargas
+// Las citas se guardan en localStorage + Firestore — persisten entre recargas
 
 PetSpot.init('cliente');
 buildClienteLayout('citas');
+
+// Cargar datos desde Firestore al iniciar
+PetSpot.loadUserFromFirestore(function() {
+  listaCitas = Almacen.cargar('citas');
+  renderProximas();
+  renderHistorial();
+});
 
 // ── Poner iconos ──
 ponerIcono(document.getElementById('btn-nueva-icon'), Icons.plus);

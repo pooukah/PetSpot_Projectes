@@ -66,6 +66,9 @@ var Icons = {
   // Conejo: orejas largas y cuerpo redondo — claramente un conejo
   rabbit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="8" cy="5" rx="1.5" ry="4"/><ellipse cx="16" cy="5" rx="1.5" ry="4"/><ellipse cx="12" cy="15" rx="6" ry="5"/><circle cx="10" cy="14" r="1" fill="currentColor" stroke="none"/><circle cx="14" cy="14" r="1" fill="currentColor" stroke="none"/><path d="M10.5 17c.4.4 2.6.4 3 0"/><path d="M12 10v3"/></svg>',
 
+  // Estrella — para alertas y favoritos
+  star: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+
   // Logo PetSpot (huella en blanco para fondo de color)
   logoPaw: '<svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><ellipse cx="6" cy="5" rx="2" ry="2.5"/><ellipse cx="12" cy="3.5" rx="2" ry="2.5"/><ellipse cx="18" cy="5" rx="2" ry="2.5"/><ellipse cx="3.5" cy="11" rx="2" ry="2.5"/><path d="M12 9.5c-4 0-6.5 2.5-6 6 .3 2 1.5 4.5 3.5 5.5 1 .5 1.7.5 2.5.5s1.5 0 2.5-.5c2-1 3.2-3.5 3.5-5.5.5-3.5-2-6-6-6z"/></svg>'
 

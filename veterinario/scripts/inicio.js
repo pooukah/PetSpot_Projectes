@@ -1,7 +1,13 @@
 // PetSpot — Inicio del veterinario
+// Datos sincronizados con Firestore
 
 PetSpot.init('veterinario');
 buildVetLayout('inicio');
+
+// Cargar datos desde Firestore al iniciar
+PetSpot.loadUserFromFirestore(function() {
+  renderCitasHoy();
+});
 
 // Iconos
 ponerIcono(document.getElementById('icon-cal'),   Icons.calendar);
@@ -41,49 +47,55 @@ for (var i = 0; i < statsData.length; i++) {
   statsGrid.appendChild(div);
 }
 
-// ── Citas de hoy (desde localStorage del vet) ──
-var citasVet  = Almacen.cargar('citas_vet');
-var hoyCitas  = document.getElementById('hoy-citas');
+// ── Citas de hoy (desde localStorage/Firestore) ──
+function renderCitasHoy() {
+  var citasVet  = Almacen.cargar('citas_vet');
+  var hoyCitas  = document.getElementById('hoy-citas');
+  while (hoyCitas.firstChild) hoyCitas.removeChild(hoyCitas.firstChild);
 
-var citasDeHoy = [];
-for (var i = 0; i < citasVet.length; i++) {
-  if (citasVet[i].fecha === 'Hoy') citasDeHoy.push(citasVet[i]);
-}
+  var citasDeHoy = [];
+  for (var i = 0; i < citasVet.length; i++) {
+    if (citasVet[i].fecha === 'Hoy') citasDeHoy.push(citasVet[i]);
+  }
 
-if (citasDeHoy.length === 0) {
-  hoyCitas.appendChild(crearEl('p', {
-    textContent: 'No hay citas programadas para hoy',
-    style: { textAlign: 'center', color: 'var(--text3)', padding: '20px', fontSize: '13px' }
-  }));
-} else {
-  for (var i = 0; i < citasDeHoy.length; i++) {
-    var c    = citasDeHoy[i];
-    var card = crearEl('div', { className: 'cita-card' });
+  if (citasDeHoy.length === 0) {
+    hoyCitas.appendChild(crearEl('p', {
+      textContent: 'No hay citas programadas para hoy',
+      style: { textAlign: 'center', color: 'var(--text3)', padding: '20px', fontSize: '13px' }
+    }));
+  } else {
+    for (var i = 0; i < citasDeHoy.length; i++) {
+      var c    = citasDeHoy[i];
+      var card = crearEl('div', { className: 'cita-card' });
 
-    var tDiv = crearEl('div', { className: 'cita-time' });
-    tDiv.appendChild(crearEl('div', { className: 'hour', textContent: c.hora   }));
-    tDiv.appendChild(crearEl('div', { className: 'date', textContent: 'Hoy'   }));
+      var tDiv = crearEl('div', { className: 'cita-time' });
+      tDiv.appendChild(crearEl('div', { className: 'hour', textContent: c.hora   }));
+      tDiv.appendChild(crearEl('div', { className: 'date', textContent: 'Hoy'   }));
 
-    var sep = crearEl('div', { className: 'cita-divider' });
+      var sep = crearEl('div', { className: 'cita-divider' });
 
-    var iDiv = crearEl('div', { className: 'cita-info' });
-    iDiv.appendChild(crearEl('div', { className: 'cita-title', textContent: c.motivo  }));
-    var sub  = crearEl('div', { className: 'cita-sub' });
-    sub.appendChild(document.createTextNode(c.cliente + ' · ' + c.mascota));
-    iDiv.appendChild(sub);
+      var iDiv = crearEl('div', { className: 'cita-info' });
+      iDiv.appendChild(crearEl('div', { className: 'cita-title', textContent: c.motivo  }));
+      var sub  = crearEl('div', { className: 'cita-sub' });
+      sub.appendChild(document.createTextNode(c.cliente + ' · ' + c.mascota));
+      iDiv.appendChild(sub);
 
-    var badge = crearEl('span', {
-      className: 'badge ' + (c.estado === 'confirmada' ? 'badge-green' : 'badge-orange'),
-      textContent: c.estado
-    });
+      var badge = crearEl('span', {
+        className: 'badge ' + (c.estado === 'confirmada' ? 'badge-green' : 'badge-orange'),
+        textContent: c.estado
+      });
 
-    card.appendChild(tDiv);
-    card.appendChild(sep);
-    card.appendChild(iDiv);
-    card.appendChild(badge);
-    hoyCitas.appendChild(card);
+      card.appendChild(tDiv);
+      card.appendChild(sep);
+      card.appendChild(iDiv);
+      card.appendChild(badge);
+      hoyCitas.appendChild(card);
+    }
   }
 }
+
+// Render inicial con datos locales
+renderCitasHoy();
 
 // ── Clientes recientes ──
 var clList = document.getElementById('clientes-list');
