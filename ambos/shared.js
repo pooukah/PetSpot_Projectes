@@ -1,5 +1,6 @@
 // PetSpot — Funciones compartidas
-// Gestiona sesión, tema, notificaciones y datos persistentes en localStorage
+// Gestiona sesión, tema, notificaciones y datos persistentes
+// Integrado con Firebase Auth + Firestore
 
 // ============================================================
 // OBJETO PRINCIPAL
@@ -18,10 +19,12 @@ var PetSpot = {
     sessionStorage.setItem('ps_user', JSON.stringify(usuario));
   },
 
-  // Cierra la sesión y vuelve al login
+  // Cierra la sesión (Firebase + sessionStorage)
   logout: function() {
+    if (typeof auth !== 'undefined') {
+      auth.signOut().catch(function(e) { console.warn('Error signing out:', e); });
+    }
     sessionStorage.clear();
-    // Subimos dos niveles desde cliente/htmls o veterinario/htmls
     var partes = window.location.pathname.split('/');
     if (partes.length >= 4) {
       window.location.href = '../../index.html';
@@ -122,26 +125,89 @@ var PetSpot = {
   },
   setPlan: function(plan) {
     localStorage.setItem('ps_plan', plan);
+  },
+
+  // ── Firebase: guardar datos del usuario en Firestore ──
+  saveUserToFirestore: function(userData) {
+    var user = this.getUser();
+    if (!user || !user.uid) return Promise.resolve();
+    if (typeof db === 'undefined') return Promise.resolve();
+    var dataToSave = userData || user;
+    return db.collection('users').doc(user.uid).set(dataToSave, { merge: true })
+      .catch(function(err) { console.warn('Error guardando en Firestore:', err); });
+  },
+
+  // ── Firebase: cargar todos los datos del usuario desde Firestore ──
+  loadUserFromFirestore: function(callback) {
+    var user = this.getUser();
+    if (!user || !user.uid || typeof db === 'undefined') {
+      if (callback) callback();
+      return;
+    }
+    var self = this;
+    db.collection('users').doc(user.uid).get().then(function(doc) {
+      if (doc.exists) {
+        var data = doc.data();
+        // Sincronizar mascotas y citas a localStorage
+        if (data.mascotas) {
+          localStorage.setItem(Almacen.clave('mascotas'), JSON.stringify(data.mascotas));
+        }
+        if (data.citas) {
+          localStorage.setItem(Almacen.clave('citas'), JSON.stringify(data.citas));
+        }
+        if (data.citas_vet) {
+          localStorage.setItem(Almacen.clave('citas_vet'), JSON.stringify(data.citas_vet));
+        }
+        if (data.pedidos) {
+          localStorage.setItem(Almacen.clave('pedidos'), JSON.stringify(data.pedidos));
+        }
+        // Actualizar datos del usuario en sessionStorage
+        var currentUser = self.getUser();
+        currentUser.nombre = data.nombre || currentUser.nombre;
+        currentUser.email = data.email || currentUser.email;
+        currentUser.direccion = data.direccion || currentUser.direccion;
+        currentUser.telefono = data.telefono || currentUser.telefono;
+        currentUser.clinica = data.clinica || currentUser.clinica;
+        self.setUser(currentUser);
+      }
+      if (callback) callback();
+    }).catch(function(err) {
+      console.warn('Error cargando desde Firestore:', err);
+      if (callback) callback();
+    });
   }
 
 };
 
 // ============================================================
-// ALMACENAMIENTO PERSISTENTE (localStorage)
-// Los datos del usuario se guardan y recuperan aunque se recargue la página
+// ALMACENAMIENTO PERSISTENTE (localStorage + Firestore sync)
 // ============================================================
 var Almacen = {
 
   // Clave única por usuario para separar datos entre cuentas
   clave: function(tipo) {
     var user = PetSpot.getUser();
-    var id = user ? user.email.replace(/[^a-z0-9]/gi, '') : 'guest';
+    var id = user ? (user.uid || user.email.replace(/[^a-z0-9]/gi, '')) : 'guest';
     return 'ps_' + tipo + '_' + id;
   },
 
-  // Guarda un array en localStorage
+  // Tipos de datos que se sincronizan con Firestore
+  _tiposSincronizables: ['mascotas', 'citas', 'citas_vet', 'pedidos'],
+
+  // Guarda un array en localStorage Y sincroniza con Firestore
   guardar: function(tipo, datos) {
     localStorage.setItem(this.clave(tipo), JSON.stringify(datos));
+    // Sincronizar con Firestore si es un tipo sincronizable
+    if (this._tiposSincronizables.indexOf(tipo) !== -1) {
+      var user = PetSpot.getUser();
+      if (user && user.uid && typeof db !== 'undefined') {
+        var updateData = {};
+        updateData[tipo] = datos;
+        db.collection('users').doc(user.uid).set(updateData, { merge: true }).catch(function(err) {
+          console.warn('Error sincronizando ' + tipo + ' con Firestore:', err);
+        });
+      }
+    }
   },
 
   // Recupera un array de localStorage (devuelve [] si no hay nada)

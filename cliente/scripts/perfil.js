@@ -1,32 +1,47 @@
 // PetSpot — Perfil del cliente
-// Mascotas persistentes en localStorage — añadir/eliminar persiste entre sesiones
+// Mascotas persistentes en localStorage + Firestore sync
 
 PetSpot.init('cliente');
 buildClienteLayout('perfil');
 
-// ── Iconos ──
+// -- Iconos --
 ponerIcono(document.getElementById('icon-edit-av'),  Icons.edit);
 ponerIcono(document.getElementById('icon-check-sm'), Icons.check);
 ponerIcono(document.getElementById('icon-plus-pet'), Icons.plus);
 ponerIcono(document.getElementById('icon-x-pet'),    Icons.x);
 ponerIcono(document.getElementById('icon-paw-modal'), Icons.paw);
 
-// ── Cargar datos del usuario ──
-var user = PetSpot.getUser();
-if (user) {
-  document.getElementById('input-nombre').value = user.nombre  || '';
-  document.getElementById('input-email').value  = user.email   || '';
-  document.getElementById('input-dir').value    = user.direccion || '';
-  document.getElementById('profile-name').textContent  = user.nombre || '';
-  document.getElementById('profile-email').textContent = user.email  || '';
+// -- Cargar datos del usuario (primero de sessionStorage, luego de Firestore) --
+function cargarDatosUsuario() {
+  var user = PetSpot.getUser();
+  if (user) {
+    document.getElementById('input-nombre').value = user.nombre  || '';
+    document.getElementById('input-email').value  = user.email   || '';
+    document.getElementById('input-dir').value    = user.direccion || '';
+    document.getElementById('profile-name').textContent  = user.nombre || '';
+    document.getElementById('profile-email').textContent = user.email  || '';
+    var telInput = document.getElementById('input-tel');
+    if (telInput) telInput.value = user.telefono || '';
+  }
 }
 
-// ── Actualizar nombre en tiempo real ──
+// Cargar datos iniciales de sessionStorage
+cargarDatosUsuario();
+
+// Luego intentar cargar desde Firestore (mas actualizado)
+PetSpot.loadUserFromFirestore(function() {
+  cargarDatosUsuario();
+  // Recargar mascotas desde Firestore
+  listaMascotas = Almacen.cargar('mascotas');
+  renderMascotas();
+});
+
+// -- Actualizar nombre en tiempo real --
 document.getElementById('input-nombre').addEventListener('input', function() {
   document.getElementById('profile-name').textContent = this.value || 'Sin nombre';
 });
 
-// ── Guardar datos personales ──
+// -- Guardar datos personales (sessionStorage + Firestore) --
 function guardarDatos() {
   var nombre = document.getElementById('input-nombre').value.trim();
   var email  = document.getElementById('input-email').value.trim();
@@ -35,26 +50,35 @@ function guardarDatos() {
   var cp     = document.getElementById('input-cp').value.trim();
 
   if (!nombre) {
-    PetSpot.notify('El nombre no puede estar vacío');
+    PetSpot.notify('El nombre no puede estar vacio');
     return;
   }
 
-  // Guardar en sesión
+  // Guardar en sesion
   var u = PetSpot.getUser();
   u.nombre    = nombre;
   u.email     = email;
+  u.telefono  = tel;
   u.direccion = dir;
   PetSpot.setUser(u);
+
+  // Guardar en Firestore
+  PetSpot.saveUserToFirestore({
+    nombre:    nombre,
+    email:     email,
+    telefono:  tel,
+    direccion: dir
+  });
 
   // Actualizar UI
   PetSpot.setTopbar();
   document.getElementById('profile-name').textContent  = nombre;
   document.getElementById('profile-email').textContent = email;
 
-  PetSpot.notify('✅ Datos guardados correctamente');
+  PetSpot.notify('Datos guardados correctamente');
 }
 
-// ── Tabs ──
+// -- Tabs --
 function showSection(sec, el) {
   document.getElementById('sec-datos').style.display    = sec === 'datos'    ? '' : 'none';
   document.getElementById('sec-mascotas').style.display = sec === 'mascotas' ? '' : 'none';
@@ -65,12 +89,11 @@ function showSection(sec, el) {
 }
 
 // ============================================================
-// MASCOTAS PERSISTENTES
+// MASCOTAS PERSISTENTES (localStorage + Firestore)
 // ============================================================
-var listaMascotas = Almacen.cargar('mascotas'); // Array guardado en localStorage
+var listaMascotas = Almacen.cargar('mascotas');
 var petIcons = { dog: Icons.dog, cat: Icons.cat, rabbit: Icons.rabbit };
 
-// Devuelve el tipo (dog/cat/rabbit) a partir del nombre de la especie
 function obtenerType(especie) {
   if (especie === 'Perro') return 'dog';
   if (especie === 'Gato')  return 'cat';
@@ -81,13 +104,12 @@ function renderMascotas() {
   var lista = document.getElementById('mascotas-list');
   while (lista.firstChild) lista.removeChild(lista.firstChild);
 
-  // Actualizar el contador
   var contador = document.getElementById('contador-mascotas');
   if (contador) contador.textContent = '(' + listaMascotas.length + ')';
 
   if (listaMascotas.length === 0) {
     lista.appendChild(crearEl('p', {
-      textContent: 'Aún no has añadido ninguna mascota',
+      textContent: 'Aun no has a\u00f1adido ninguna mascota',
       style: { textAlign: 'center', color: 'var(--text3)', padding: '24px', fontSize: '13px' }
     }));
     return;
@@ -102,7 +124,6 @@ function crearCardMascota(m) {
   var card = crearEl('div', { className: 'mascota-card' });
   card.dataset.id = m.id;
 
-  // Cabecera de la tarjeta
   var top = crearEl('div', { className: 'mascota-card-top' });
 
   var iconDiv = crearEl('div', { className: 'mascota-icon' });
@@ -111,9 +132,8 @@ function crearCardMascota(m) {
   var infoDiv  = document.createElement('div');
   infoDiv.style.flex = '1';
   infoDiv.appendChild(crearEl('div', { className: 'mascota-name',  textContent: m.nombre }));
-  infoDiv.appendChild(crearEl('div', { className: 'mascota-breed', textContent: m.especie + ' · ' + m.raza }));
+  infoDiv.appendChild(crearEl('div', { className: 'mascota-breed', textContent: m.especie + ' \u00b7 ' + m.raza }));
 
-  // Botón eliminar
   var btnEliminar = crearEl('button', { className: 'btn btn-danger btn-sm', textContent: 'Eliminar' });
   btnEliminar.addEventListener('click', crearHandlerEliminar(m.id));
 
@@ -121,10 +141,8 @@ function crearCardMascota(m) {
   top.appendChild(infoDiv);
   top.appendChild(btnEliminar);
 
-  // Campos editables
   var grid = crearEl('div', { className: 'grid-2', style: { gap: '12px' } });
 
-  // Peso — editable
   var pesoBloq = document.createElement('div');
   pesoBloq.className = 'form-group';
   var pesoLabel = crearEl('label', { className: 'form-label', textContent: 'Peso (kg)' });
@@ -134,7 +152,6 @@ function crearCardMascota(m) {
   pesoBloq.appendChild(pesoLabel);
   pesoBloq.appendChild(pesoInput);
 
-  // Fecha nacimiento — solo lectura
   var fechaBloq = document.createElement('div');
   fechaBloq.className = 'form-group';
   var fechaLabel = crearEl('label', { className: 'form-label', textContent: 'Fecha de nacimiento' });
@@ -145,11 +162,10 @@ function crearCardMascota(m) {
   fechaBloq.appendChild(fechaLabel);
   fechaBloq.appendChild(fechaInput);
 
-  // Microchip — solo lectura
   var chipBloq = document.createElement('div');
   chipBloq.className = 'form-group';
   chipBloq.style.gridColumn = '1 / -1';
-  var chipLabel = crearEl('label', { className: 'form-label', textContent: 'Nº Microchip' });
+  var chipLabel = crearEl('label', { className: 'form-label', textContent: 'N\u00ba Microchip' });
   var chipInput = crearEl('input', { className: 'form-input', type: 'text' });
   chipInput.value    = m.microchip;
   chipInput.readOnly = true;
@@ -161,7 +177,6 @@ function crearCardMascota(m) {
   grid.appendChild(fechaBloq);
   grid.appendChild(chipBloq);
 
-  // Botón guardar cambios de peso
   var btnGuardar = crearEl('button', { className: 'btn btn-primary btn-sm', textContent: 'Guardar cambios' });
   btnGuardar.style.marginTop = '8px';
   btnGuardar.addEventListener('click', crearHandlerGuardarPeso(m.id));
@@ -174,7 +189,7 @@ function crearCardMascota(m) {
 
 function crearHandlerEliminar(id) {
   return function() {
-    if (!confirm('¿Seguro que quieres eliminar esta mascota? También se borrarán sus citas.')) return;
+    if (!confirm('\u00bfSeguro que quieres eliminar esta mascota? Tambi\u00e9n se borrar\u00e1n sus citas.')) return;
     eliminarMascota(id);
   };
 }
@@ -190,13 +205,11 @@ function crearHandlerGuardarPeso(id) {
       }
     }
     Almacen.guardar('mascotas', listaMascotas);
-    PetSpot.notify('✅ Peso actualizado');
+    PetSpot.notify('Peso actualizado');
   };
 }
 
-// Elimina la mascota y sus citas del localStorage
 function eliminarMascota(id) {
-  // Encontrar el nombre de la mascota para borrar sus citas
   var nombreMascota = '';
   var nuevaLista = [];
   for (var i = 0; i < listaMascotas.length; i++) {
@@ -209,7 +222,6 @@ function eliminarMascota(id) {
   listaMascotas = nuevaLista;
   Almacen.guardar('mascotas', listaMascotas);
 
-  // Borrar también las citas asociadas a esa mascota
   if (nombreMascota) {
     var citas = Almacen.cargar('citas');
     var nuevasCitas = [];
@@ -225,7 +237,7 @@ function eliminarMascota(id) {
   PetSpot.notify('Mascota eliminada');
 }
 
-// ── Añadir nueva mascota ──
+// -- A\u00f1adir nueva mascota --
 document.getElementById('btn-add-pet').addEventListener('click', function() {
   document.getElementById('modal-pet').classList.add('open');
 });
@@ -243,11 +255,9 @@ function addPet() {
     return;
   }
 
-  // Convertir fecha de YYYY-MM-DD a DD/MM/YYYY
   var partes       = fecha.split('-');
   var fechaFormato = partes[2] + '/' + partes[1] + '/' + partes[0];
 
-  // Crear la mascota y guardarla
   var nueva = {
     id:         Date.now(),
     nombre:     nombre,
@@ -264,14 +274,13 @@ function addPet() {
   renderMascotas();
   closeModal();
 
-  // Limpiar el formulario
   document.getElementById('nueva-nombre').value    = '';
   document.getElementById('nueva-raza').value      = '';
   document.getElementById('nueva-peso').value      = '';
   document.getElementById('nueva-fecha').value     = '';
   document.getElementById('nueva-microchip').value = '';
 
-  PetSpot.notify('✅ ' + nombre + ' añadido/a correctamente');
+  PetSpot.notify(nombre + ' a\u00f1adido/a correctamente');
 }
 
 function closeModal() {
@@ -279,12 +288,12 @@ function closeModal() {
   for (var i = 0; i < modales.length; i++) modales[i].classList.remove('open');
 }
 
-// ── Notificaciones ──
+// -- Notificaciones --
 var notifCfg = [
   ['Recordatorio de citas', '24h antes de cada cita', true],
   ['Mensajes nuevos',       'Cuando recibas un mensaje', true],
   ['Ofertas',               'Novedades y descuentos',    false],
-  ['Email marketing',       'Boletín mensual',           false]
+  ['Email marketing',       'Bolet\u00edn mensual',           false]
 ];
 var notifLista = document.getElementById('notif-list');
 for (var i = 0; i < notifCfg.length; i++) {
@@ -299,5 +308,5 @@ for (var i = 0; i < notifCfg.length; i++) {
   notifLista.appendChild(row);
 }
 
-// ── Render inicial ──
+// -- Render inicial --
 renderMascotas();
