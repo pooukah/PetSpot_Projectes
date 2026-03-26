@@ -81,4 +81,6 @@ function actualizarIconoTema() {
   var oscuro = localStorage.getItem('ps_dark') !== 'false';
   ponerIcono(document.getElementById('login-theme-icon'), oscuro ? Icons.moon : Icons.sun);
   document.getElementById('login-theme-toggle').classList.toggle('on', !oscuro);
+  document.getElementById('icon-cliente').innerHTML = Icons.profileUser || Icons.user;
+  document.getElementById('icon-vet').innerHTML = Icons.profileVet || Icons.stethoscope;
 }
