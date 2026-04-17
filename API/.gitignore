@@ -1,0 +1,18 @@
+# Fitxers que NO s'han de pujar a GitHub
+
+# Certificats SSL — contenen claus privades
+ssl/
+
+# Variables d'entorn — contenen contrasenyes
+env.sh
+.env
+
+# Entorn virtual de Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Base de dades local
+*.db
+*.sqlite

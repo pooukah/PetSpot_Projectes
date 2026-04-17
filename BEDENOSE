@@ -1,0 +1,41 @@
+CREATE DATABASE IF NOT EXISTS petspot;
+USE petspot;
+
+-- CLINICA (tiene que existir para que los vets creen su cuenta)
+CREATE TABLE clinica (
+    id_clinica INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(200) NOT NULL,
+    direccion VARCHAR(255) NOT NULL,
+    ciudad VARCHAR(100) NOT NULL,
+    telefono VARCHAR(9),
+    email VARCHAR(255),
+    activo BOOLEAN DEFAULT TRUE,
+    valoracion FLOAT DEFAULT 0
+);
+
+-- USUARIOS, TANTO CLIENTES COMO VETERINARIOS
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    apellidos VARCHAR(100) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    telefono VARCHAR(9),
+    hashed_password VARCHAR(255) NOT NULL,
+    rol ENUM('cliente', 'veterinario') NOT NULL,
+
+    -- solo para vets, clientes null
+    clinica_id INT NULL,  
+    especialidad VARCHAR(50),
+    numColegiado VARCHAR(15),
+    añosExp INT NULL,
+
+    -- solo para clientes, vets null
+    direccion VARCHAR(255) NULL,
+    codigo_postal VARCHAR(5) NULL,
+
+    -- fks
+    FOREIGN KEY (clinica_id) REFERENCES clinica(id_clinica)
+);
+
+INSERT INTO clinica(nombre, direccion, ciudad, telefono)
+VALUES('Clinica San Pedro', 'Calle Mayor 123', 'Barcelona', '612345678')
