@@ -184,11 +184,6 @@ function crearCardClinica(c, idx) {
 
   // Botones de acción
   var actionsRow = crearEl('div', { className: 'clinica-actions' });
-  var btnCita = crearEl('button', { className: 'btn btn-primary btn-sm', textContent: 'Pedir cita' });
-  btnCita.addEventListener('click', function(e) {
-    e.stopPropagation();
-    PetSpot.notify('Redirigiendo a citas...');
-  });
   var btnTel = crearEl('button', { className: 'btn btn-ghost btn-sm' });
   var telIconSpan = document.createElement('span');
   telIconSpan.style.display = 'inline-flex';
@@ -197,9 +192,6 @@ function crearCardClinica(c, idx) {
   ponerIcono(telIconSpan, Icons.phone);
   btnTel.appendChild(telIconSpan);
   btnTel.appendChild(document.createTextNode(' ' + c.tel));
-  btnTel.addEventListener('click', function(e) { e.stopPropagation(); });
-
-  actionsRow.appendChild(btnCita);
   actionsRow.appendChild(btnTel);
   card.appendChild(actionsRow);
 
