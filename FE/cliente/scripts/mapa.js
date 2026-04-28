@@ -1,41 +1,50 @@
-// PetSpot — Mapa del cliente
-// Google Maps JavaScript API + filtro de un solo valor activo
-// Sin innerHTML — todo con createElement
+import { Mapa } from "../../models/Mapa.js";
 
 PetSpot.init('cliente');
 buildClienteLayout('mapa');
 
-ponerIcono(document.getElementById('icon-search'), Icons.search);
+var mapaInstance = null;    
+var marcadores = [];      
+var clinicas = [];
+var clinicasFiltradas = [];   
+var filtroActivo = 'todas'; 
 
-// ── Estado del mapa ──
-var mapaGoogle      = null;    // Instancia del mapa de Google
-var marcadores      = [];      // Marcadores en el mapa
-var clinicasFiltradas = [];    // Clínicas visibles según el filtro activo
-var filtroActivo    = 'todas'; // Qué filtro está seleccionado
+async function cargarClinicas(){
+  const API_URL = "https://localhost:443/clinicas";
+  console.log('1. Iniciando fetch...');
+  try{
+    const resposta = await fetch(API_URL, {
+      method: 'GET',
+      headers: {'Accept': 'application/json'}
+    });
+    console.log('2. Respuesta recibida, status:', resposta.status);
+    if(!resposta.ok){
+      throw new Error("No se han podido cargar las clinicas");
+    }
+    clinicas = await resposta.json();
+    console.log('3. Clinicas recibidas:', clinicas);
+    aplicarFiltro('todas', null);
+    console.log('4. clinicasFiltradas:', clinicasFiltradas);
+  }catch(error){
+    console.error('ERROR en cargarClinicas:', error);
+    PetSpot.notify("ERROR: al cargar clinicas");
+  }
+}
 
-// ============================================================
-// INICIALIZAR EL MAPA DE GOOGLE
-// Esta función la llama Google Maps automáticamente al cargarse
-// ============================================================
-function initMap() {
-  var barcelona = { lat: 41.3874, lng: 2.1686 };
+function iniciarMapa(){
+  const bcn = { lat:41.3874, lng:2.1686 };
+  mapaInstance = new Mapa(bcn.lat, bcn.lng);
+  mapaInstance.obtenirPosicio();
 
-  mapaGoogle = new google.maps.Map(document.getElementById('google-map'), {
-    center:           barcelona,
-    zoom:             14,
-    styles:           obtenerEstiloMapa(),
-    disableDefaultUI: true,
-    zoomControl:      true
-  });
-
-  // Al iniciar, mostrar todas las clínicas
-  aplicarFiltro('todas', document.querySelector('.filter-chip'));
+  if (clinicasFiltradas.length > 0) {
+    actualizarMarcadores();
+  }
 }
 
 // Devuelve el estilo oscuro o claro del mapa según el tema actual
 function obtenerEstiloMapa() {
   var oscuro = localStorage.getItem('ps_dark') !== 'false';
-  if (!oscuro) return []; // Estilo por defecto (claro)
+  if (!oscuro) return []; 
   return [
     { elementType: 'geometry',              stylers: [{ color: '#1e2535' }] },
     { elementType: 'labels.text.stroke',    stylers: [{ color: '#1e2535' }] },
@@ -47,178 +56,127 @@ function obtenerEstiloMapa() {
   ];
 }
 
-// ============================================================
-// APLICAR FILTRO (solo uno activo a la vez)
-// ============================================================
 function aplicarFiltro(tipo, chipEl) {
   filtroActivo = tipo;
 
-  // Quitar clase active de todos los chips y ponérsela solo al clicado
-  var chips = document.querySelectorAll('.filter-chip');
-  for (var i = 0; i < chips.length; i++) {
+  const chips = document.querySelectorAll('.filter-chip');
+  for(let i=0; i<chips.length; i++){
     chips[i].classList.remove('active');
   }
-  if (chipEl) chipEl.classList.add('active');
+  if(chipEl) chipEl.classList.add('active');
 
-  // Filtrar las clínicas según el tipo seleccionado
   clinicasFiltradas = [];
-  for (var i = 0; i < MockData.clinicas.length; i++) {
-    var c = MockData.clinicas[i];
-    var mostrar = false;
-    if (tipo === 'todas')     mostrar = true;
-    if (tipo === '24h')       mostrar = c.h24;
-    if (tipo === 'urgencias') mostrar = c.urgencias;
-    if (tipo === 'abiertas')  mostrar = c.abierta;
-    if (mostrar) clinicasFiltradas.push(c);
+  for(let i=0; i<clinicas.length; i++){
+    const c = clinicas[i];
+    let mostrar = false;
+    if(tipo==='todas') mostrar = true;
+    if(tipo==='24h') mostrar = c.tiene_24h === 1 || c.tiene_24h === true;
+    if(tipo==='urgencias') mostrar = c.tiene_urgencias === 1 || c.tiene_urgencias===true;
+    if(mostrar) clinicasFiltradas.push(c);
   }
-
-  renderClinicas();
-  if (mapaGoogle) actualizarMarcadores();
+  renderListaClinicas();
+  actualizarMarcadores();
 }
 
-// ============================================================
-// ACTUALIZAR MARCADORES EN EL MAPA
-// ============================================================
 function actualizarMarcadores() {
-  // Quitar marcadores anteriores del mapa
-  for (var i = 0; i < marcadores.length; i++) {
-    marcadores[i].setMap(null);
-  }
-  marcadores = [];
-
-  // Añadir un marcador por cada clínica filtrada
-  for (var i = 0; i < clinicasFiltradas.length; i++) {
-    var c = clinicasFiltradas[i];
-    var marcador = new google.maps.Marker({
-      position: { lat: c.lat, lng: c.lng },
-      map:      mapaGoogle,
-      title:    c.nombre,
-      icon: {
-        path:         google.maps.SymbolPath.CIRCLE,
-        scale:        10,
-        fillColor:    c.abierta ? '#6dd3b1' : '#545e7a',
-        fillOpacity:  0.9,
-        strokeColor:  '#fff',
-        strokeWeight: 2
-      }
-    });
-
-    // Clicar el marcador selecciona esa clínica en la lista
-    marcador.addListener('click', crearHandlerMarcador(i));
-    marcadores.push(marcador);
+  if (!mapaInstance) return;
+  
+  mapaInstance.borrarPunts();
+  
+  for (let i = 0; i < clinicasFiltradas.length; i++) {
+    const c = clinicasFiltradas[i];
+    const popupContent = `
+      <h3>${c.nombre}</h3>
+      <p>${c.direccion}</p>
+      <p>⭐ ${c.valoracion || 0}/5</p>
+      ${c.tiene_24h ? '<p>🕐 24h</p>' : ''}
+      ${c.tiene_urgencias ? '<p>🚨 Urgencias</p>' : ''}
+    `;
+    mapaInstance.pintarPunt(c.latitud, c.longitud, popupContent);
   }
 }
 
-function crearHandlerMarcador(idx) {
-  return function() { seleccionarClinica(idx); };
-}
-
-// ============================================================
-// RENDERIZAR LISTA DE CLÍNICAS (sin innerHTML)
-// ============================================================
-function renderClinicas() {
-  var lista = document.getElementById('clinicas-list');
+function renderListaClinicas() {
+  const lista = document.getElementById('clinicas-list');
   while (lista.firstChild) lista.removeChild(lista.firstChild);
 
   if (clinicasFiltradas.length === 0) {
     lista.appendChild(crearEl('p', {
-      textContent: 'No hay clínicas con este filtro',
+      textContent: 'No hay clinicas con este filtro',
       style: { textAlign: 'center', color: 'var(--text3)', padding: '24px', fontSize: '13px' }
     }));
     return;
   }
 
-  for (var i = 0; i < clinicasFiltradas.length; i++) {
+  for (let i = 0; i < clinicasFiltradas.length; i++) {
     lista.appendChild(crearCardClinica(clinicasFiltradas[i], i));
   }
 }
 
+function seleccionarClinica(idx) {
+  const cards = document.querySelectorAll('.clinic-card');
+  for (let i = 0; i < cards.length; i++) {
+    cards[i].classList.toggle('active', parseInt(cards[i].dataset.idx) === idx);
+  }
+  if (cards[idx]) {
+    cards[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+  if (mapaInstance && clinicasFiltradas[idx]) {
+    mapaInstance.posicionarMapa(clinicasFiltradas[idx].latitud, clinicasFiltradas[idx].longitud);
+  }
+}
+
 function crearCardClinica(c, idx) {
-  var card = crearEl('div', { className: 'clinica-card' });
+  const card = crearEl('div', { className: 'clinic-card' });
   card.dataset.idx = idx;
 
-  // Fila superior: nombre + badge abierto/cerrado
-  var topRow = document.createElement('div');
-  topRow.style.display        = 'flex';
-  topRow.style.alignItems     = 'flex-start';
-  topRow.style.justifyContent = 'space-between';
-  topRow.style.gap            = '8px';
-  topRow.appendChild(crearEl('div', { className: 'clinica-name', textContent: c.nombre }));
-  topRow.appendChild(crearEl('span', {
-    className: 'badge ' + (c.abierta ? 'badge-green' : 'badge-red'),
-    textContent: c.abierta ? 'Abierto' : 'Cerrado',
-    style: { flexShrink: '0' }
-  }));
-  card.appendChild(topRow);
+  const nombreEl = crearEl('div', { className: 'clinica-name', textContent: c.nombre });
+  card.appendChild(nombreEl);
 
-  // Dirección con icono de pin
-  var dirRow = crearEl('div', { className: 'clinica-addr' });
-  var pinSpan = document.createElement('span');
+  const dirRow = crearEl('div', { className: 'clinica-addr' });
+  const pinSpan = document.createElement('span');
   pinSpan.style.display = 'flex';
   pinSpan.style.width   = '13px';
   pinSpan.style.height  = '13px';
   ponerIcono(pinSpan, Icons.pin);
   dirRow.appendChild(pinSpan);
-  dirRow.appendChild(document.createTextNode(' ' + c.dir + ' · '));
-  var distEl = crearEl('strong', { textContent: c.dist });
-  dirRow.appendChild(distEl);
+  dirRow.appendChild(document.createTextNode(' ' + c.direccion));
   card.appendChild(dirRow);
 
-  // Estrellas + badges 24h/urgencias
-  var metaRow = crearEl('div', { className: 'clinica-meta' });
-  var stars = '';
-  for (var s = 1; s <= 5; s++) {
-    stars += s <= Math.floor(c.rating) ? '★' : '☆';
+  const metaRow = crearEl('div', { className: 'clinica-meta' });
+  const rating = c.valoracion || 0;
+  let stars = '';
+  for (let s = 1; s <= 5; s++) {
+    stars += s <= Math.floor(rating) ? '★' : '☆';
   }
-  var starsEl = crearEl('span', { textContent: stars, style: { color: '#ffa500', fontSize: '13px' } });
-  var ratingEl = crearEl('span', { textContent: c.rating, style: { fontSize: '12px', color: 'var(--text2)', marginLeft: '4px' } });
+  const starsEl = crearEl('span', { textContent: stars, style: { color: '#ffa500', fontSize: '13px' } });
+  const ratingEl = crearEl('span', { textContent: rating.toFixed(1), style: { fontSize: '12px', color: 'var(--text2)', marginLeft: '4px' } });
   metaRow.appendChild(starsEl);
   metaRow.appendChild(ratingEl);
-  if (c.h24) {
+
+  if (c.tiene_24h === 1 || c.tiene_24h === true) {
     metaRow.appendChild(crearEl('span', { className: 'badge badge-blue', textContent: '24h', style: { marginLeft: '6px' } }));
   }
-  if (c.urgencias) {
+  if (c.tiene_urgencias === 1 || c.tiene_urgencias === true) {
     metaRow.appendChild(crearEl('span', { className: 'badge badge-orange', textContent: 'Urgencias', style: { marginLeft: '4px' } }));
   }
   card.appendChild(metaRow);
-
-  // Botones de acción
-  var actionsRow = crearEl('div', { className: 'clinica-actions' });
-  var btnTel = crearEl('button', { className: 'btn btn-ghost btn-sm' });
-  var telIconSpan = document.createElement('span');
-  telIconSpan.style.display = 'inline-flex';
-  telIconSpan.style.width   = '13px';
-  telIconSpan.style.height  = '13px';
-  ponerIcono(telIconSpan, Icons.phone);
-  btnTel.appendChild(telIconSpan);
-  btnTel.appendChild(document.createTextNode(' ' + c.tel));
-  actionsRow.appendChild(btnTel);
-  card.appendChild(actionsRow);
-
-  // Clicar la card selecciona la clínica
-  card.addEventListener('click', crearHandlerSeleccionarClinica(idx));
+  card.addEventListener('click', () => seleccionarClinica(idx));
   return card;
 }
 
-function crearHandlerSeleccionarClinica(idx) {
-  return function() { seleccionarClinica(idx); };
-}
+document.addEventListener('DOMContentLoaded', async function() {
+  await cargarClinicas();
+  iniciarMapa();
 
-// ============================================================
-// SELECCIONAR UNA CLÍNICA (resaltar en lista y centrar mapa)
-// ============================================================
-function seleccionarClinica(idx) {
-  var cards = document.querySelectorAll('.clinica-card');
-  for (var i = 0; i < cards.length; i++) {
-    cards[i].classList.toggle('active', parseInt(cards[i].dataset.idx) === idx);
-  }
-  // Hacer scroll suave hasta la card
-  if (cards[idx]) {
-    cards[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
-  // Centrar el mapa en la clínica seleccionada
-  if (mapaGoogle && clinicasFiltradas[idx]) {
-    mapaGoogle.setCenter({ lat: clinicasFiltradas[idx].lat, lng: clinicasFiltradas[idx].lng });
-    mapaGoogle.setZoom(16);
-  }
-}
+  const chips = document.querySelectorAll('.filter-chip');
+  chips.forEach(chip => {
+    chip.removeAttribute('onclick');
+    const tipo = chip.textContent.trim();
+    let filtroTipo = 'todas';
+    if (tipo === '24h') filtroTipo = '24h';
+    if (tipo === 'Urgencias') filtroTipo = 'urgencias';
+    if (tipo === 'Todas') filtroTipo = 'todas';
+    chip.addEventListener('click', () => aplicarFiltro(filtroTipo, chip));
+  });
+});

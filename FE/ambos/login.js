@@ -1,58 +1,71 @@
-// PetSpot — Login
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-// Al principio no hay perfil seleccionado
-var perfilSeleccionado = null;
-
-// Datos de prueba para los dos perfiles
-var datosPrueba = {
-  cliente:     { nombre: 'María Fernández', email: 'maria@email.com',       direccion: 'Carrer de Balmes, 42, 3º Barcelona 08007' },
-  veterinario: { nombre: 'Carmen García',   email: 'dr.garcia@vetpro.es',   clinica: 'Clínica VetPro', direccion: 'Carrer de Balmes, 120 Barcelona' }
+const firebaseConfig = {
+    apiKey: "TU_API_KEY",
+    authDomain: "petscop-651b5.firebaseapp.com",
+    projectId: "petscop-651b5",
+    storageBucket: "petscop-651b5.firebasestorage.app",
+    messagingSenderId: "TU_SENDER_ID",
+    appId: "TU_APP_ID"
 };
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+// al principio no hay perfil seleccionado
+var perfilSeleccionado = null;
 
 function seleccionarPerfil(tipo) {
   perfilSeleccionado = tipo;
-
-  // Cambiar clase del body para aplicar colores del perfil
   document.body.classList.remove('cliente', 'veterinario');
   document.body.classList.add(tipo);
-
-  // Marcar el botón activo
   document.getElementById('opt-cliente').classList.toggle('active', tipo === 'cliente');
   document.getElementById('opt-vet').classList.toggle('active', tipo === 'veterinario');
-
-  // Poner el email de prueba
-  document.getElementById('email').value = datosPrueba[tipo].email;
 }
 
 function iniciarSesion() {
-  // Comprobar que se ha seleccionado perfil
   if (!perfilSeleccionado) {
     PetSpot.notify('Por favor, selecciona un perfil primero');
     return;
   }
 
   var email = document.getElementById('email').value.trim();
-  if (!email) {
-    PetSpot.notify('Introduce tu correo electrónico');
+  var password = document.getElementById('pass').value;
+  
+  if (!email || !password) {
+    PetSpot.notify('Introduce tu correo y contraseña');
     return;
   }
 
-  // Guardar datos del usuario en la sesión
-  var datos = datosPrueba[perfilSeleccionado];
-  var usuario = {
-    tipo:      perfilSeleccionado,
-    nombre:    datos.nombre,
-    email:     datos.email,
-    clinica:   datos.clinica || '',
-    direccion: datos.direccion || ''
-  };
-  PetSpot.setUser(usuario);
-
-  // Redirigir a la página correspondiente
-  if (perfilSeleccionado === 'cliente') {
-    window.location.href = 'cliente/htmls/inicio.html';
-  } else {
-    window.location.href = 'veterinario/htmls/inicio.html';
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+    const firebaseUid = user.uid;
+    
+    localStorage.setItem('firebase_uid', firebaseUid);
+    localStorage.setItem('user_email', email);
+    
+    var usuario = {
+      tipo: perfilSeleccionado,
+      email: email,
+      firebase_uid: firebaseUid
+    };
+    if (perfilSeleccionado === 'cliente') {
+      window.location.href = 'cliente/htmls/inicio.html';
+    } else {
+      window.location.href = 'veterinario/htmls/inicio.html';
+    }
+    
+  }catch(error){
+    let mensaje = "Error al iniciar sesión";
+    if (error.code === 'auth/user-not-found') {
+      mensaje = "Usuario no encontrado. ¿Estás registrado?";
+    } else if (error.code === 'auth/wrong-password') {
+      mensaje = "Contraseña incorrecta";
+    } else if (error.code === 'auth/invalid-email') {
+      mensaje = "Email inválido";
+    }
+    PetSpot.notify(mensaje);
   }
 }
 

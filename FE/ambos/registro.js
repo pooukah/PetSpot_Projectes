@@ -5,15 +5,12 @@ var perfilSeleccionado = null;
 function seleccionarPerfil(tipo) {
   perfilSeleccionado = tipo;
 
-  // Colores según perfil
   document.body.classList.remove('cliente', 'veterinario');
   document.body.classList.add(tipo);
 
-  // Botón activo
   document.getElementById('opt-cliente').classList.toggle('active', tipo === 'cliente');
   document.getElementById('opt-vet').classList.toggle('active', tipo === 'veterinario');
 
-  // Mostrar campos extra de veterinario
   if (tipo === 'veterinario') {
     document.getElementById('vet-fields').style.display = 'block';
   } else {
@@ -27,24 +24,22 @@ function comprobarClinica() {
   var msgNoClinica = document.getElementById('msg-no-clinica');
 
   if (clinica === 'no-encuentro') {
-    // Mostrar info de contacto
     msgNoClinica.style.display = 'block';
   } else {
     msgNoClinica.style.display = 'none';
   }
 }
 
-function registrarse() {
-  // Comprobar perfil
+async function registrarse() {
   if (!perfilSeleccionado) {
     PetSpot.notify('Por favor, selecciona un perfil');
     return;
   }
 
-  // Comprobar campos básicos
   var nombre    = document.getElementById('reg-nombre').value.trim();
   var apellidos = document.getElementById('reg-apellidos').value.trim();
   var email     = document.getElementById('reg-email').value.trim();
+  var telefono  = document.getElementById('reg-telefono').value.trim();
   var pass      = document.getElementById('reg-pass').value;
   var pass2     = document.getElementById('reg-pass2').value;
 
@@ -63,27 +58,94 @@ function registrarse() {
     return;
   }
 
-  // Si es veterinario, comprobar clínica
+  var datos = {
+    nombre: nombre,
+    apellidos: apellidos,
+    email: email,
+    telefono: telefono,
+    password: pass,
+    rol: perfilSeleccionado
+  };
+
   if (perfilSeleccionado === 'veterinario') {
-    var clinica = document.getElementById('reg-clinica').value;
-    if (!clinica || clinica === 'no-encuentro') {
+    var clinicaSelect = document.getElementById('reg-clinica');
+    var clinicaId = clinicaSelect.value;
+    
+    if (!clinicaId || clinicaId === 'no-encuentro') {
       PetSpot.notify('Debes seleccionar una clínica registrada en PetSpot');
       return;
     }
+    datos.id_clinica = parseInt(clinicaId);
   }
 
-  // Todo correcto — simular registro y redirigir al login
-  // (En una versión real, aquí se haría una llamada al servidor)
-  PetSpot.notify('✅ Cuenta creada correctamente. Ahora puedes iniciar sesión.');
+  var url = "https://localhost:443/auth/registro";
 
-  // Esperar un momento y redirigir al login
-  setTimeout(function() {
-    window.location.href = 'index.html';
-  }, 1800);
+  try {
+    const resposta = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(datos)
+    });
+
+    if (!resposta.ok) {
+      const error = await resposta.json();
+      throw new Error(error.detail || 'Error en el registro');
+    }
+
+    const data = await resposta.json();
+    console.log(data);
+    
+    PetSpot.notify('✅ Cuenta creada correctamente. Ahora puedes iniciar sesión.');
+
+    setTimeout(function() {
+      window.location.href = 'index.html';
+    }, 1800);
+
+  } catch (error) {
+    console.log('ERROR:', error);
+    PetSpot.notify('❌ Error: ' + error.message);
+  }
 }
 
 // ── Al cargar la página ──
 (function() {
+  // Cargar clínicas en el desplegable
+  async function cargarClinicas() {
+    const API_URL = "https://localhost:443/clinicas/registro";
+    try {
+      const resposta = await fetch(API_URL, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        }
+      });
+      
+      if (!resposta.ok) {
+        throw new Error("No se pudieron cargar las clínicas");
+      }
+      
+      const clinicas = await resposta.json();
+      const select = document.getElementById('reg-clinica');
+      
+      if (select) {
+        while (select.options.length > 1) {
+          select.remove(1);
+        }
+        
+        for (let i = 0; i < clinicas.length; i++) {
+          const option = document.createElement('option');
+          option.value = clinicas[i].id_clinica;
+          option.textContent = clinicas[i].nombre;
+          select.appendChild(option);
+        }
+      }
+    } catch (error) {
+      console.log("Error cargando clínicas:", error);
+    }
+  }
+
+  cargarClinicas();
+
   // Tema
   var oscuro = localStorage.getItem('ps_dark') !== 'false';
   document.body.classList.toggle('modoclaro', !oscuro);

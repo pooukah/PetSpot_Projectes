@@ -30,6 +30,7 @@ services:
       - DB_USER=petspot
       - DB_PASSWORD=PetSpot
       - DB_NAME=petspot
+      - FIREBASE_PROJECT_ID=petscop-651b5
     networks:
       - petspot_network
     depends_on:

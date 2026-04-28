@@ -1,38 +1,36 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PetSpot — Mapa</title>
-<link rel="stylesheet" href="../../ambos/shared.css">
-<link rel="stylesheet" href="../styles/mapa.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PetSpot — Mapa</title>
+  <link rel="stylesheet" href="../../ambos/shared.css">
+  <link rel="stylesheet" href="../styles/mapa.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body class="cliente">
-<div class="main">
-  <div class="page-header">
-    <div><h1>Mapa</h1><p>Clínicas veterinarias cerca de ti</p></div>
-  </div>
+  <div class="main">
+    <div class="page-header">
+      <div><h1>Mapa</h1><p>Clínicas veterinarias cerca de ti</p></div>
+    </div>
 
-  <!-- Filtros — solo uno activo a la vez -->
-  <div class="map-filters" id="map-filters">
-    <div class="filter-chip active" onclick="aplicarFiltro('todas', this)">Todas</div>
-    <div class="filter-chip" onclick="aplicarFiltro('24h', this)">24h</div>
-    <div class="filter-chip" onclick="aplicarFiltro('urgencias', this)">Urgencias</div>
-    <div class="filter-chip" onclick="aplicarFiltro('abiertas', this)">Abierto ahora</div>
-  </div>
+    <div class="map-filters" id="map-filters">
+      <div class="filter-chip active" onclick="aplicarFiltro('todas', this)">Todas</div>
+      <div class="filter-chip" onclick="aplicarFiltro('24h', this)">24h</div>
+      <div class="filter-chip" onclick="aplicarFiltro('urgencias', this)">Urgencias</div>
+    </div>
 
-  <div class="map-layout">
-    <div class="clinic-list" id="clinicas-list"></div>
-    <div class="map-container">
-      <div id="google-map" style="width:100%;height:100%;min-height:520px;border-radius:var(--radius)"></div>
+    <div class="map-layout">
+      <div class="clinic-list" id="clinicas-list"></div>
+      <div class="map-container">
+        <div id="map" style="width:100%;height:100%;min-height:520px;border-radius:var(--radius)"></div>
+      </div>
     </div>
   </div>
-</div>
-<script src="../../ambos/icons.js"></script>
-<script src="../../ambos/shared.js"></script>
-<script src="../../ambos/layout.js"></script>
-<script src="../scripts/mapa.js"></script>
-<!-- Google Maps API — reemplaza YOUR_API_KEY con tu clave real -->
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap"></script>
+  <script src="../../ambos/icons.js"></script>
+  <script src="../../ambos/shared.js"></script>
+  <script src="../../ambos/layout.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module" src="../scripts/mapa.js"></script>
 </body>
 </html>

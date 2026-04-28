@@ -8,13 +8,12 @@
 
 .clinic-card {
   background: var(--bg2);
-  border: 1.5px solid var(--border);
+  border: 1.5px solid rgb(108, 107, 107);
   border-radius: var(--radius);
   padding: 15px 16px;
   cursor: pointer;
   transition: border-color 0.18s, transform 0.18s;
 }
-.clinic-card:hover, .clinic-card.active { border-color: var(--accent); transform: translateX(3px); }
 .clinic-name { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
 .clinic-addr { font-size: 13px; color: var(--text2); display: flex; align-items: center; gap: 6px; }
 .clinic-addr svg { width: 13px; height: 13px; color: var(--text3); flex-shrink: 0; }

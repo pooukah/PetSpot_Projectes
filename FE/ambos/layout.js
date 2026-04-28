@@ -1,27 +1,26 @@
-// PetSpot — Construye la sidebar, topbar y los iconos de la página
-// Permite innerHTML solo para insertar los SVGs desde el objeto Icons
+// construye la sidebar, topbar y los iconos de la página
+// innerHTML solo para insertar los svgs (LO SIENTO ORIOL)
 
-// ── Convierte un string SVG en un nodo y lo mete en el contenedor ──
+
 function ponerIcono(contenedor, svgString) {
-  // Vaciamos el contenedor
+  // vaciamos el contenedor
   while (contenedor.firstChild) contenedor.removeChild(contenedor.firstChild);
-  // Insertamos el SVG usando innerHTML (controlado, solo para iconos)
+  // insertamos svg
   contenedor.innerHTML = svgString;
-  // Ajustamos el SVG para que herede el color y tamaño
   const svg = contenedor.firstElementChild;
+  // ajustamos tamaño
   if (svg) {
     svg.setAttribute('width', '100%');
     svg.setAttribute('height', '100%');
   }
 }
-
-// ── Carga todos los iconos que hay en la página (span con id="icon-xxx") ──
+// buscamos los elementos html icon-x 
 function cargarIconosPagina() {
-  const mapa = {
+  const aux = {
     cal: 'calendar',
     euro: 'euro',
     users: 'users',
-    alert: 'alert',       // Si no existe en Icons, añádelo
+    alert: 'alert',       
     home: 'home',
     chat: 'chat',
     map: 'map',
@@ -49,15 +48,17 @@ function cargarIconosPagina() {
     rabbit: 'rabbit'
   };
 
-  for (let sufijo in mapa) {
-    const elemento = document.getElementById(`icon-${sufijo}`);
-    if (elemento && Icons[mapa[sufijo]]) {
-      ponerIcono(elemento, Icons[mapa[sufijo]]);
+  // aqui ponemos el icono que corresponda a lo de arriba
+  for (let el in aux) {
+    const elemento = document.getElementById(`icon-${el}`);
+    if (elemento && Icons[aux[el]]) {
+      ponerIcono(elemento, Icons[aux[el]]);
     }
   }
 }
 
-// ── Helper para crear elementos con atributos comunes ──
+// si props no se pasa, sera un obj vacio
+// se llama desde lo de crearloslayouts
 function crearEl(tag, props = {}) {
   const el = document.createElement(tag);
   if (props.className) el.className = props.className;
@@ -67,7 +68,7 @@ function crearEl(tag, props = {}) {
   return el;
 }
 
-// ── Nav del cliente (sin packs, sin badges) ──
+// las opciones que tendra el cliente, lo crea
 function buildClienteLayout(paginaActiva) {
   const nav = [
     { id: 'inicio', icon: Icons.home,     label: 'Inicio'   },
@@ -80,7 +81,7 @@ function buildClienteLayout(paginaActiva) {
   construirLayout(paginaActiva, nav, 'cliente');
 }
 
-// ── Nav del veterinario (analíticas solo si tiene plan Enterprise) ──
+// lo mismo pero de vet
 function buildVetLayout(paginaActiva) {
   const plan = PetSpot.getPlan();
   const nav = [
@@ -91,21 +92,22 @@ function buildVetLayout(paginaActiva) {
     { id: 'suscripcion', icon: Icons.card,     label: 'Suscripción' },
     { id: 'perfil',      icon: Icons.user,     label: 'Mi Perfil'   }
   ];
+  // ESTO ES OPCIONAL, BORRALO SINO
   if (plan === 'enterprise') {
     nav.splice(4, 0, { id: 'analiticas', icon: Icons.chart, label: 'Analíticas' });
   }
   construirLayout(paginaActiva, nav, 'veterinario');
 }
 
-// ── Construcción principal de la interfaz (sidebar + topbar) ──
+// esto construye lo que le pasemos de las dos funciones de arriba
 function construirLayout(paginaActiva, nav, tipo) {
   const oscuro = localStorage.getItem('ps_dark') !== 'false';
 
-  // ========== SIDEBAR ==========
+  // SIDEBAR 
   const sidebar = document.createElement('aside');
   sidebar.className = 'sidebar';
 
-  // Logo
+  // LOGO
   const logoDiv = crearEl('div', { className: 'sidebar-logo' });
   const logoIcon = crearEl('div', { className: 'logo-icon' });
   ponerIcono(logoIcon, Icons.logoPaw);
@@ -114,11 +116,12 @@ function construirLayout(paginaActiva, nav, tipo) {
   logoDiv.appendChild(logoNombre);
   sidebar.appendChild(logoDiv);
 
-  // Navegación
+  // SIDEBAR
   const navEl = crearEl('nav', { className: 'sidebar-nav' });
   const navLabel = crearEl('div', { className: 'nav-label', textContent: 'Menú' });
   navEl.appendChild(navLabel);
 
+  //menu
   nav.forEach(item => {
     const link = document.createElement('a');
     link.href = `${item.id}.html`;
@@ -141,7 +144,7 @@ function construirLayout(paginaActiva, nav, tipo) {
 
   sidebar.appendChild(navEl);
 
-  // Parte inferior (tema + cerrar sesión)
+  // MODO OSCURO...
   const bottom = crearEl('div', { className: 'sidebar-bottom' });
 
   const themeRow = crearEl('div', { className: 'theme-toggle-row' });
@@ -157,6 +160,7 @@ function construirLayout(paginaActiva, nav, tipo) {
   const themeLabel = crearEl('span', { textContent: oscuro ? 'Modo claro' : 'Modo oscuro' });
   themeLabel.id = 'theme-label';
 
+  // botondemodoscuroyblanco
   const themeToggle = crearEl('div', { className: 'toggle-switch' + (!oscuro ? ' on' : '') });
   themeToggle.id = 'theme-toggle';
 
@@ -165,7 +169,7 @@ function construirLayout(paginaActiva, nav, tipo) {
   themeRow.appendChild(themeToggle);
   bottom.appendChild(themeRow);
 
-  // Botón cerrar sesión
+  // LO DE CERRAR SESION
   const logoutBtn = crearEl('button', { className: 'btn-logout', id: 'logout-btn' });
   const logoutIconSpan = document.createElement('span');
   logoutIconSpan.style.display = 'flex';
@@ -180,7 +184,7 @@ function construirLayout(paginaActiva, nav, tipo) {
 
   sidebar.appendChild(bottom);
 
-  // ========== TOPBAR ==========
+  // TOPBAR, lo de olamaria
   const topbar = document.createElement('header');
   topbar.className = 'topbar';
 
@@ -195,12 +199,10 @@ function construirLayout(paginaActiva, nav, tipo) {
   topbar.appendChild(spacer);
   topbar.appendChild(avatar);
 
-  // Insertar en el DOM (sidebar va primero, luego topbar)
   document.body.insertBefore(topbar, document.body.firstChild);
   document.body.insertBefore(sidebar, document.body.firstChild);
 
-  // Asignar funcionalidad
-  PetSpot.setTopbar(); // rellena saludo y avatar
+  PetSpot.setTopbar();
 
   avatar.addEventListener('click', () => {
     window.location.href = 'perfil.html';
@@ -218,6 +220,5 @@ function construirLayout(paginaActiva, nav, tipo) {
     PetSpot.logout();
   });
 
-  // Cargar los iconos que están dentro del contenido de la página
   cargarIconosPagina();
 }
