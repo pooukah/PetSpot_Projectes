@@ -1,7 +1,7 @@
 import mysql.connector
 
 db_config = {
-    'host': 'mariadb',
+    'host': 'localhost',  # Cambiado de 'mariadb' a 'localhost' para ejecutar desde tu PC
     'user': 'petspot',
     'password': 'PetSpot',
     'database': 'petspot',
