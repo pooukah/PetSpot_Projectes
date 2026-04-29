@@ -1,0 +1,184 @@
+-- ============================================================
+-- 1. CLINICAS 
+-- ============================================================
+CREATE TABLE IF NOT EXISTS clinica (
+    id_clinica INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(200) NOT NULL,
+    direccion VARCHAR(255) NOT NULL,
+    ciudad VARCHAR(100) NOT NULL,
+    latitud DECIMAL(10,8) NOT NULL,      
+    longitud DECIMAL(11,8) NOT NULL,     
+    telefono VARCHAR(20),
+    tiene_24h BOOLEAN DEFAULT FALSE,     
+    tiene_urgencias BOOLEAN DEFAULT FALSE, 
+    valoracion DECIMAL(2,1) DEFAULT 0
+);
+
+-- ============================================================
+-- 2. PERFIL VETERINARIO
+-- ============================================================
+CREATE TABLE IF NOT EXISTS veterinario (
+    id_veterinario INT AUTO_INCREMENT PRIMARY KEY,
+    firebase_uid VARCHAR(128) UNIQUE NOT NULL,  
+    nombre VARCHAR(100) NOT NULL,
+    apellidos VARCHAR(100) NOT NULL,
+    telefono VARCHAR(20),
+    email VARCHAR(255),
+    id_clinica INT NOT NULL,                     
+    numero_colegiado VARCHAR(50),
+    especialidad_principal VARCHAR(100),
+    anios_experiencia INT,
+    foto_perfil_url VARCHAR(500),
+    FOREIGN KEY (id_clinica) REFERENCES clinica(id_clinica)
+);
+
+-- ============================================================
+-- 3. PERFIL CLIENTE
+-- ============================================================
+CREATE TABLE IF NOT EXISTS cliente (
+    id_cliente INT AUTO_INCREMENT PRIMARY KEY,
+    firebase_uid VARCHAR(128) UNIQUE NOT NULL, 
+    nombre VARCHAR(100) NOT NULL,
+    apellidos VARCHAR(100) NOT NULL,
+    telefono VARCHAR(20),
+    email VARCHAR(255),
+    direccion VARCHAR(255),
+    codigo_postal VARCHAR(10),
+    ciudad VARCHAR(100),
+    foto_perfil_url VARCHAR(500)
+);
+
+-- ============================================================
+-- 4. MASCOTAS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS mascota (
+    id_mascota INT AUTO_INCREMENT PRIMARY KEY,
+    firebase_uid VARCHAR(128) NOT NULL,          
+    nombre VARCHAR(100) NOT NULL,
+    especie VARCHAR(50) NOT NULL,                
+    raza VARCHAR(100),
+    peso DECIMAL(5,2),                          
+    fecha_nacimiento DATE,
+    microchip VARCHAR(50),
+    FOREIGN KEY (firebase_uid) REFERENCES cliente(firebase_uid) ON DELETE CASCADE
+);
+
+-- ============================================================
+-- 5. CITAS 
+-- ============================================================
+CREATE TABLE IF NOT EXISTS cita (
+    id_cita INT AUTO_INCREMENT PRIMARY KEY,
+    firebase_uid_cliente VARCHAR(128) NOT NULL,
+    id_veterinario INT NOT NULL,
+    id_mascota INT NOT NULL,
+    fecha DATE NOT NULL,
+    hora TIME NOT NULL,
+    motivo TEXT,
+    estado ENUM('pendiente', 'confirmada', 'completada', 'cancelada') DEFAULT 'pendiente',
+    FOREIGN KEY (firebase_uid_cliente) REFERENCES cliente(firebase_uid),
+    FOREIGN KEY (id_veterinario) REFERENCES veterinario(id_veterinario),
+    FOREIGN KEY (id_mascota) REFERENCES mascota(id_mascota)
+);
+
+-- ============================================================
+-- 6. PRODUCTOS 
+-- ============================================================
+CREATE TABLE IF NOT EXISTS producto (
+    id_producto INT AUTO_INCREMENT PRIMARY KEY,
+    id_clinica INT NOT NULL,                     
+    nombre VARCHAR(200) NOT NULL,
+    categoria VARCHAR(50),                       
+    descripcion TEXT,
+    precio DECIMAL(10,2) NOT NULL,
+    stock INT NOT NULL DEFAULT 0,
+    foto_url VARCHAR(500),
+    veces_vendido INT DEFAULT 0,
+    FOREIGN KEY (id_clinica) REFERENCES clinica(id_clinica)
+);
+
+-- ============================================================
+-- 7. PEDIDOS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS pedido (
+    id_pedido INT AUTO_INCREMENT PRIMARY KEY,
+    numero_pedido VARCHAR(20) UNIQUE NOT NULL,   
+    firebase_uid_cliente VARCHAR(128) NOT NULL,
+    titular_nombre VARCHAR(200) NOT NULL,
+    iban VARCHAR(34) NOT NULL,                   
+    direccion_envio VARCHAR(255) NOT NULL,
+    total DECIMAL(10,2) NOT NULL,
+    estado ENUM('procesando', 'en_camino', 'entregado') DEFAULT 'procesando',
+    fecha_pedido TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (firebase_uid_cliente) REFERENCES cliente(firebase_uid)
+);
+
+-- ============================================================
+-- 8. DETALLES DEL PEDIDO 
+-- ============================================================
+CREATE TABLE IF NOT EXISTS detalle_pedido (
+    id_detalle INT AUTO_INCREMENT PRIMARY KEY,
+    id_pedido INT NOT NULL,
+    id_producto INT NOT NULL,
+    cantidad INT NOT NULL,
+    precio_unitario DECIMAL(10,2) NOT NULL,
+    subtotal DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (id_pedido) REFERENCES pedido(id_pedido) ON DELETE CASCADE,
+    FOREIGN KEY (id_producto) REFERENCES producto(id_producto)
+);
+
+-- ============================================================
+-- 9. PLANES DE SUSCRIPCION
+-- ============================================================
+CREATE TABLE IF NOT EXISTS plan_suscripcion (
+    id_plan INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(50) UNIQUE NOT NULL,          
+    precio_mensual DECIMAL(10,2) NOT NULL,
+    descripcion TEXT,
+    caracteristicas JSON                        
+);
+
+INSERT INTO plan_suscripcion (nombre, precio_mensual, descripcion) VALUES
+('basico', 29.00, 'Plan basico para clinicas pequenas'),
+('profesional', 79.00, 'Plan profesional para clinicas en crecimiento'),
+('enterprise', 149.99, 'Plan enterprise para grandes clinicas');
+
+-- ============================================================
+-- 10. SUSCRIPCIONES ACTIVAS 
+-- ============================================================
+CREATE TABLE IF NOT EXISTS suscripcion (
+    id_suscripcion INT AUTO_INCREMENT PRIMARY KEY,
+    id_clinica INT NOT NULL,                    
+    id_plan INT NOT NULL,
+    fecha_inicio DATE NOT NULL,
+    fecha_fin DATE,
+    estado ENUM('activo', 'pendiente', 'cancelado', 'expirado') DEFAULT 'pendiente',
+    renovacion_automatica BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (id_clinica) REFERENCES clinica(id_clinica),
+    FOREIGN KEY (id_plan) REFERENCES plan_suscripcion(id_plan)
+);
+
+-- ============================================================
+-- 11. FACTURACION (historial de pagos)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS facturacion (
+    id_factura INT AUTO_INCREMENT PRIMARY KEY,
+    id_clinica INT NOT NULL,
+    id_suscripcion INT NOT NULL,
+    numero_factura VARCHAR(50) UNIQUE NOT NULL,
+    fecha_emision DATE NOT NULL,
+    importe DECIMAL(10,2) NOT NULL,
+    estado ENUM('pagado', 'pendiente') DEFAULT 'pendiente',
+    FOREIGN KEY (id_clinica) REFERENCES clinica(id_clinica),
+    FOREIGN KEY (id_suscripcion) REFERENCES suscripcion(id_suscripcion)
+);
+
+-- ============================================================
+-- INSERTAR CLINICAS DE EJEMPLO
+-- ============================================================
+INSERT INTO clinica (nombre, direccion, ciudad, latitud, longitud, telefono, tiene_24h, tiene_urgencias, valoracion) VALUES
+('Hospital Veterinari Barcelona', 'Carrer de la Republica Argentina, 27', 'Barcelona', 41.4052, 2.1432, '934345675', TRUE, TRUE, 4.7),
+('Clinica Veterinaria Glories', 'Carrer de Bolivia, 108', 'Barcelona', 41.4087, 2.1927, '933073717', FALSE, TRUE, 4.4),
+('Clinica Veterinaria Sant Antoni', 'Carrer del Comte d Urgell, 80', 'Barcelona', 41.3802, 2.1610, '934264424', FALSE, FALSE, 4.3),
+('Veterinari Sants', 'Carrer de Sants, 102', 'Barcelona', 41.3755, 2.1335, '934901639', TRUE, FALSE, 4.1),
+('Veterinari Horta', 'Passeig de la Vall d Hebron, 121', 'Barcelona', 41.4249, 2.1404, '934277147', FALSE, FALSE, 4.0),
+('Clinica Veterinaria Pedralbes', 'Avinguda de Pedralbes, 62', 'Barcelona', 41.3902, 2.1179, '932048504', TRUE, TRUE, 4.6);
