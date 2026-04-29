@@ -1,29 +1,21 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-const firebaseConfig = {
-    apiKey: "TU_API_KEY",
-    authDomain: "petscop-651b5.firebaseapp.com",
-    projectId: "petscop-651b5",
-    storageBucket: "petscop-651b5.firebasestorage.app",
-    messagingSenderId: "TU_SENDER_ID",
-    appId: "TU_APP_ID"
-};
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-
 // al principio no hay perfil seleccionado
 var perfilSeleccionado = null;
 
 function seleccionarPerfil(tipo) {
   perfilSeleccionado = tipo;
+
+  // aplicar los colores segun el tipo de perfil seleccionado
   document.body.classList.remove('cliente', 'veterinario');
   document.body.classList.add(tipo);
+
+  // Marcar el botón activo
   document.getElementById('opt-cliente').classList.toggle('active', tipo === 'cliente');
   document.getElementById('opt-vet').classList.toggle('active', tipo === 'veterinario');
+
 }
 
-function iniciarSesion() {
+async function iniciarSesion() {
+   console.log('iniciarSesion llamado, perfil:', perfilSeleccionado);
   if (!perfilSeleccionado) {
     PetSpot.notify('Por favor, selecciona un perfil primero');
     return;
@@ -31,41 +23,55 @@ function iniciarSesion() {
 
   var email = document.getElementById('email').value.trim();
   var password = document.getElementById('pass').value;
-  
   if (!email || !password) {
-    PetSpot.notify('Introduce tu correo y contraseña');
+    PetSpot.notify('Introduce tu correo electrónico');
     return;
   }
 
   try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
-    const firebaseUid = user.uid;
-    
-    localStorage.setItem('firebase_uid', firebaseUid);
-    localStorage.setItem('user_email', email);
-    
-    var usuario = {
-      tipo: perfilSeleccionado,
-      email: email,
-      firebase_uid: firebaseUid
-    };
-    if (perfilSeleccionado === 'cliente') {
-      window.location.href = 'cliente/htmls/inicio.html';
-    } else {
-      window.location.href = 'veterinario/htmls/inicio.html';
+    const response = await fetch("https://localhost:443/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password, rol: perfilSeleccionado })
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      console.error('Login fallido:', err);
+      throw new Error(err.detail || "Error en el login");
     }
+
+    const data = await response.json();
+
+    PetSpot.setUser({
+      tipo: data.rol,
+      nombre: data.nombre || data.email,
+      email: data.email,
+      id: data.id
+    });
+
+    localStorage.setItem('user_id', data.id);
+    localStorage.setItem('user_email', data.email);
+    localStorage.setItem('user_rol', data.rol);
+
+    // Redirección con log
+    const destino = data.rol === 'cliente' 
+      ? 'cliente/htmls/inicio.html' 
+      : 'veterinario/htmls/inicio.html';
+    window.location.href = destino;
     
-  }catch(error){
-    let mensaje = "Error al iniciar sesión";
-    if (error.code === 'auth/user-not-found') {
-      mensaje = "Usuario no encontrado. ¿Estás registrado?";
-    } else if (error.code === 'auth/wrong-password') {
-      mensaje = "Contraseña incorrecta";
-    } else if (error.code === 'auth/invalid-email') {
-      mensaje = "Email inválido";
-    }
-    PetSpot.notify(mensaje);
+    PetSpot.notify('✅ Sesión iniciada correctamente');
+
+    // Redirigir según el rol
+    // if (data.rol === 'cliente') {
+    //   window.location.href = 'cliente/htmls/inicio.html';
+    // } else {
+    //   window.location.href = 'veterinario/htmls/inicio.html';
+    // }
+
+  } catch (error) {
+    console.error('Error catch:', error);
+    PetSpot.notify('❌ ' + error.message);
   }
 }
 

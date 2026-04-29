@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
 
+########################################### CLINICA
 # CLINICA PARA MAPA
 class Clinica(BaseModel):
     id_clinica: Optional[int] = None
@@ -18,3 +19,34 @@ class Clinica(BaseModel):
 class ClinicaRegistro(BaseModel):
     id_clinica: int
     nombre: str
+
+########################################### CLIENTE
+
+# PARA REGISTRO
+class ClienteRegistro(BaseModel):
+    nombre: str
+    apellidos: str
+    email: str
+    telefono: str
+    password: str
+
+
+########################################### VETERINARIO
+
+# PARA REGISTRO
+class VetRegistro(BaseModel):
+    nombre: str
+    apellidos: str
+    email: str
+    telefono: str
+    password: str
+    clinica: str
+
+########################################### AMBOS
+
+# PARA LOGIN
+class Login(BaseModel):
+    email: str
+    password: str
+    rol: str
+

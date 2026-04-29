@@ -63,22 +63,25 @@ async function registrarse() {
     apellidos: apellidos,
     email: email,
     telefono: telefono,
-    password: pass,
-    rol: perfilSeleccionado
+    password: pass
   };
 
-  if (perfilSeleccionado === 'veterinario') {
-    var clinicaSelect = document.getElementById('reg-clinica');
-    var clinicaId = clinicaSelect.value;
+  var url = "";
+
+  if (perfilSeleccionado === 'cliente') {
+    url = "https://localhost:443/auth/registro/cliente";
+  } else {
+    url = "https://localhost:443/auth/registro/veterinario";
     
-    if (!clinicaId || clinicaId === 'no-encuentro') {
+    var clinicaSelect = document.getElementById('reg-clinica');
+    var clinicaNombre = clinicaSelect.options[clinicaSelect.selectedIndex]?.text;
+    
+    if (!clinicaNombre || clinicaSelect.value === 'no-encuentro' || clinicaSelect.value === '') {
       PetSpot.notify('Debes seleccionar una clínica registrada en PetSpot');
       return;
     }
-    datos.id_clinica = parseInt(clinicaId);
+    datos.clinica = clinicaNombre;
   }
-
-  var url = "https://localhost:443/auth/registro";
 
   try {
     const resposta = await fetch(url, {
@@ -109,7 +112,6 @@ async function registrarse() {
 
 // ── Al cargar la página ──
 (function() {
-  // Cargar clínicas en el desplegable
   async function cargarClinicas() {
     const API_URL = "https://localhost:443/clinicas/registro";
     try {
@@ -134,7 +136,7 @@ async function registrarse() {
         
         for (let i = 0; i < clinicas.length; i++) {
           const option = document.createElement('option');
-          option.value = clinicas[i].id_clinica;
+          option.value = clinicas[i].nombre;  // ← guardar el nombre, no el id
           option.textContent = clinicas[i].nombre;
           select.appendChild(option);
         }
@@ -146,11 +148,9 @@ async function registrarse() {
 
   cargarClinicas();
 
-  // Tema
   var oscuro = localStorage.getItem('ps_dark') !== 'false';
   document.body.classList.toggle('modoclaro', !oscuro);
 
-  // Iconos
   ponerIcono(document.getElementById('logo-icon'), Icons.logoPaw);
   ponerIcono(document.getElementById('icon-cliente'), Icons.user);
   ponerIcono(document.getElementById('icon-vet'), Icons.stethoscope);
