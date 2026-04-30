@@ -1,7 +1,7 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from db import get_db_connection
-from models import Clinica, ClinicaRegistro, ClienteRegistro, VetRegistro, Login
+from models import Clinica, ClinicaRegistro, ClienteRegistro, VetRegistro, Login, NewProd
 from typing import List
 
 app = FastAPI()
@@ -154,43 +154,132 @@ def get_clinicas():
         cursor.close()
         conn.close()
 
-##################################################### 6. GET INFO (cliente)
-@app.get("/cliente/perfil")
-def get_cliente_perfil(email: str):
+##################################################### 6. POST PRODUCT (vet)
+@app.post("/productos", status_code=201)
+def create_producto(producto: NewProd, x_user_email: str = Header(...)):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
+    
     try:
-        cursor.execute("SELECT id_cliente as id, nombre, apellidos, email, telefono, direccion, codigo_postal FROM cliente WHERE email = %s", (email,))
-        cliente = cursor.fetchone()
+        cursor.execute("SELECT id_clinica FROM veterinario WHERE email = %s", (x_user_email,))
+        vet = cursor.fetchone()
         
-        if not cliente:
-            raise HTTPException(status_code=404, detail="Cliente no encontrado")
+        if not vet:
+            raise HTTPException(status_code=404, detail="Veterinario no encontrado")
         
-        return cliente
+        id_clinica = vet['id_clinica']
+        
+        cursor.execute("""
+            INSERT INTO producto (nombre, categoria, precio, stock, id_clinica)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (producto.nombre, producto.categoria, producto.precio, producto.stock, id_clinica))
+        conn.commit()
+        
+        return {"message": "Producto creado correctamente", "id_producto": cursor.lastrowid}
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
     finally:
         cursor.close()
         conn.close()
-
-##################################################### 6. ACTUALIZAR INFO (cliente)
-@app.put("/cliente/perfil")
-def update_cliente_perfil(
-    email: str,  
-    nombre: str,
-    telefono: str = None,
-    direccion: str = None,
-    codigo_postal: str = None
-):
+ 
+##################################################### 7. GET PRODUCTS (vet)    
+@app.get("/productos/mis-productos")
+def get_mis_productos(x_user_email: str = Header(...)):
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        cursor.execute("SELECT id_clinica FROM veterinario WHERE email = %s", (x_user_email,))
+        vet = cursor.fetchone()
+        
+        if not vet:
+            raise HTTPException(status_code=404, detail="Veterinario no encontrado")
+        
+        id_clinica = vet['id_clinica']
+        
+        cursor.execute("""
+            SELECT id_producto, nombre, categoria, precio, stock, veces_vendido
+            FROM producto 
+            WHERE id_clinica = %s
+            ORDER BY id_producto DESC
+        """, (id_clinica,))
+        
+        return cursor.fetchall()
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
+ 
+##################################################### 8. UPDATE PRODUCT (vet)
+@app.put("/productos/{id_producto}")
+def update_producto(id_producto: int, producto: NewProd, x_user_email: str = Header(...)):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
     try:
         cursor.execute("""
-            UPDATE cliente 
-            SET nombre = %s, telefono = %s, direccion = %s, codigo_postal = %s
-            WHERE email = %s
-        """, (nombre, telefono, direccion, codigo_postal, email))
+            SELECT p.id_producto
+            FROM producto p
+            JOIN veterinario v ON p.id_clinica = v.id_clinica
+            WHERE p.id_producto = %s AND v.email = %s
+        """, (id_producto, x_user_email))
+        
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Producto no encontrado o no tienes permiso")
+        
+        cursor.execute("""
+            UPDATE producto 
+            SET nombre = %s, categoria = %s, precio = %s, stock = %s
+            WHERE id_producto = %s
+        """, (producto.nombre, producto.categoria, producto.precio, producto.stock, id_producto))
         conn.commit()
         
-        return {"message": "Perfil actualizado correctamente"}
+        return {"message": "Producto actualizado correctamente"}
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
+ 
+##################################################### 9. DELETE PRODUCT (vet)
+@app.delete("/productos/{id_producto}")
+def delete_producto(id_producto: int, x_user_email: str = Header(...)):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        cursor.execute("""
+            SELECT p.id_producto
+            FROM producto p
+            JOIN veterinario v ON p.id_clinica = v.id_clinica
+            WHERE p.id_producto = %s AND v.email = %s
+        """, (id_producto, x_user_email))
+        
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Producto no encontrado o no tienes permiso")
+        
+        cursor.execute("DELETE FROM producto WHERE id_producto = %s", (id_producto,))
+        conn.commit()
+        
+        return {"message": "Producto eliminado correctamente"}
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
     finally:
         cursor.close()
         conn.close()

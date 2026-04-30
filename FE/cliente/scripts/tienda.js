@@ -1,6 +1,3 @@
-// PetSpot — Tienda del cliente
-// Carrito en memoria, pedidos persistentes en localStorage
-
 PetSpot.init('cliente');
 buildClienteLayout('tienda');
 
@@ -18,13 +15,10 @@ for (var i = 0; i < MockData.productos.length; i++) {
 
 var categoriaActiva = 'Todas';
 
-// ── Carrito en memoria (no hace falta persistirlo) ──
 var carrito = {};
 
-// ── Pedidos persistentes ──
 var misPedidos = Almacen.cargar('pedidos');
 
-// ── Construir filtros de categoría ──
 var filtrosEl = document.getElementById('cat-filters');
 for (var i = 0; i < categorias.length; i++) {
   var chip = crearEl('div', {
@@ -35,7 +29,6 @@ for (var i = 0; i < categorias.length; i++) {
   filtrosEl.appendChild(chip);
 }
 
-// Función auxiliar para el closure del filtro
 function crearHandlerCategoria(cat, chip) {
   return function() {
     categoriaActiva = cat;
@@ -46,14 +39,10 @@ function crearHandlerCategoria(cat, chip) {
   };
 }
 
-// ── Buscar productos ──
 function filterProducts() {
   renderProductos();
 }
 
-// ============================================================
-// RENDER DE PRODUCTOS
-// ============================================================
 function renderProductos() {
   var query = document.getElementById('search-input').value.toLowerCase();
   var grid  = document.getElementById('products-grid');

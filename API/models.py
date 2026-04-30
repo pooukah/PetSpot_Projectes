@@ -50,3 +50,12 @@ class Login(BaseModel):
     password: str
     rol: str
 
+########################################### MARKETPLACE
+# PARA CREAR UN PRODUCTO
+class NewProd(BaseModel):
+    nombre: str
+    categoria: str
+    precio: float
+    stock: int
+
+    

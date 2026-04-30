@@ -1,5 +1,3 @@
-// PetSpot — Tienda del veterinario
-
 PetSpot.init('veterinario');
 buildVetLayout('tienda');
 
@@ -19,45 +17,25 @@ function showTab(tab, el) {
   el.classList.add('active');
 }
 
-// Lista de productos (copia para poder modificar)
 var listaProductos = [];
-for (var i = 0; i < MockData.productos.length; i++) {
-  listaProductos.push({
-    id:      MockData.productos[i].id,
-    nombre:  MockData.productos[i].nombre,
-    precio:  MockData.productos[i].precio,
-    stock:   MockData.productos[i].stock,
-    ventas:  MockData.productos[i].ventas,
-    cat:     MockData.productos[i].cat,
-    visible: MockData.productos[i].visible,
-    imagen:  MockData.productos[i].imagen
-  });
-}
-
 var productoEditandoId = null;
 
 function renderProductos() {
   var tbody = document.getElementById('productos-body');
   while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+  
   for (var i = 0; i < listaProductos.length; i++) {
     var p = listaProductos[i];
     var lowStock = p.stock < 20;
-    var opacidad = p.visible ? '1' : '0.45';
     var fila = document.createElement('tr');
-    fila.id = 'prod-row-' + p.id;
-    fila.style.opacity = opacidad;
-    // Celda: Producto (imagen/icono + nombre)
+
+    // Celda: Producto
     var td1 = document.createElement('td');
     var prodWrap = document.createElement('div');
     prodWrap.style.cssText = 'display:flex;align-items:center;gap:11px';
     var imgDiv = document.createElement('div');
     imgDiv.style.cssText = 'width:40px;height:40px;background:var(--bg3);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden';
-    if (p.imagen) {
-      var img = document.createElement('img');
-      img.src = p.imagen; img.alt = p.nombre;
-      img.style.cssText = 'width:100%;height:100%;object-fit:cover';
-      imgDiv.appendChild(img);
-    } else { ponerIcono(imgDiv, Icons.box); }
+    ponerIcono(imgDiv, Icons.box);
     prodWrap.appendChild(imgDiv);
     prodWrap.appendChild(crearEl('span', { textContent: p.nombre, style: { fontWeight: '600', fontSize: '14px' } }));
     td1.appendChild(prodWrap);
@@ -75,7 +53,7 @@ function renderProductos() {
     td4.appendChild(crearEl('span', { className: lowStock ? 'stock-low' : 'stock-ok', textContent: (lowStock ? '⚠️ ' : '') + p.stock + ' uds.' }));
 
     // Celda: Ventas
-    var td5 = crearEl('td', { textContent: p.ventas + ' vendidos', style: { color: 'var(--text2)' } });
+    var td5 = crearEl('td', { textContent: (p.ventas || 0) + ' vendidos', style: { color: 'var(--text2)' } });
 
     // Celda: Acciones
     var td6 = document.createElement('td');
@@ -84,14 +62,10 @@ function renderProductos() {
     var btnEditar = crearEl('button', { className: 'btn btn-ghost btn-sm' });
     ponerIcono(btnEditar, Icons.edit);
     btnEditar.addEventListener('click', crearHandlerEditar(p.id));
-    var btnOcultar = crearEl('button', { className: 'btn btn-ghost btn-sm', textContent: p.visible ? '👁' : '🚫' });
-    btnOcultar.title = p.visible ? 'Ocultar' : 'Mostrar';
-    btnOcultar.addEventListener('click', crearHandlerVisible(p.id));
-    var btnBorrar  = crearEl('button', { className: 'btn btn-danger btn-sm' });
+    var btnBorrar = crearEl('button', { className: 'btn btn-danger btn-sm' });
     ponerIcono(btnBorrar, Icons.trash);
     btnBorrar.addEventListener('click', crearHandlerEliminar(p.id));
     accionesDiv.appendChild(btnEditar);
-    accionesDiv.appendChild(btnOcultar);
     accionesDiv.appendChild(btnBorrar);
     td6.appendChild(accionesDiv);
 
@@ -102,27 +76,26 @@ function renderProductos() {
 }
 
 function crearHandlerEditar(id) { return function() { abrirEditar(id); }; }
-function crearHandlerVisible(id) { return function() { toggleVisible(id); }; }
 function crearHandlerEliminar(id) { return function() { eliminarProducto(id); }; }
 
-function toggleVisible(id) {
-  for (var i = 0; i < listaProductos.length; i++) {
-    if (listaProductos[i].id === id) {
-      listaProductos[i].visible = !listaProductos[i].visible;
-      break;
-    }
-  }
-  renderProductos();
-}
+async function eliminarProducto(id) {
+  const email = localStorage.getItem('user_email');
+  try {
+    const response = await fetch(`https://localhost:443/productos/${id}`, {
+      method: "DELETE",
+      headers: { "x-user-email": email }
+    });
 
-function eliminarProducto(id) {
-  var nueva = [];
-  for (var i = 0; i < listaProductos.length; i++) {
-    if (listaProductos[i].id !== id) nueva.push(listaProductos[i]);
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.detail || 'Error al eliminar');
+    }
+
+    PetSpot.notify('Producto eliminado');
+    cargarMisProductos();
+  } catch (error) {
+    PetSpot.notify('❌ ' + error.message);
   }
-  listaProductos = nueva;
-  renderProductos();
-  PetSpot.notify('Producto eliminado');
 }
 
 function abrirEditar(id) {
@@ -133,7 +106,6 @@ function abrirEditar(id) {
   if (!prod) return;
   productoEditandoId = id;
 
-  // Pre-rellenar el modal de editar con los datos actuales
   document.getElementById('edit-nombre').value = prod.nombre;
   document.getElementById('edit-precio').value = prod.precio;
   document.getElementById('edit-stock').value  = prod.stock;
@@ -142,7 +114,7 @@ function abrirEditar(id) {
   document.getElementById('modal-editar').classList.add('open');
 }
 
-function guardarEdicion() {
+async function guardarEdicion() {
   if (!productoEditandoId) return;
   var nombre = document.getElementById('edit-nombre').value.trim();
   var precio = parseFloat(document.getElementById('edit-precio').value);
@@ -154,22 +126,61 @@ function guardarEdicion() {
     return;
   }
 
-  for (var i = 0; i < listaProductos.length; i++) {
-    if (listaProductos[i].id === productoEditandoId) {
-      listaProductos[i].nombre = nombre;
-      listaProductos[i].precio = precio;
-      listaProductos[i].stock  = stock;
-      listaProductos[i].cat    = cat;
-      break;
-    }
-  }
+  const email = localStorage.getItem('user_email');
+  try {
+    const response = await fetch(`https://localhost:443/productos/${productoEditandoId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "x-user-email": email
+      },
+      body: JSON.stringify({ nombre, categoria: cat, precio, stock })
+    });
 
-  renderProductos();
-  closeModal();
-  PetSpot.notify('✅ Producto actualizado');
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.detail || 'Error al actualizar');
+    }
+
+    PetSpot.notify('✅ Producto actualizado');
+    closeModal();
+    cargarMisProductos();
+  } catch (error) {
+    PetSpot.notify('❌ ' + error.message);
+  }
 }
 
-function addProduct() {
+async function cargarMisProductos() {
+  const email = localStorage.getItem('user_email');
+  if (!email) return;
+
+  try {
+    const response = await fetch(`https://localhost:443/productos/mis-productos`, {
+      method: "GET",
+      headers: { "x-user-email": email }
+    });
+
+    if (!response.ok) throw new Error('Error al cargar productos');
+
+    const productos = await response.json();
+    
+    listaProductos = productos.map(p => ({
+      id: p.id_producto,
+      nombre: p.nombre,
+      precio: p.precio,
+      stock: p.stock,
+      ventas: p.veces_vendido || 0,
+      cat: p.categoria
+    }));
+    
+    renderProductos();
+  } catch (error) {
+    console.error('Error:', error);
+    PetSpot.notify('❌ Error al cargar productos');
+  }
+}
+
+async function addProduct() {
   var nombre = document.getElementById('nuevo-nombre').value.trim();
   var precio = parseFloat(document.getElementById('nuevo-precio').value);
   var stock  = parseInt(document.getElementById('nuevo-stock').value);
@@ -180,25 +191,49 @@ function addProduct() {
     return;
   }
 
-  listaProductos.push({
-    id:      Date.now(),
-    nombre:  nombre,
-    precio:  precio,
-    stock:   stock,
-    ventas:  0,
-    cat:     cat,
-    visible: true,
-    imagen:  null
-  });
+  const email = localStorage.getItem('user_email');
+  if (!email) {
+    PetSpot.notify('❌ No se encontró el usuario');
+    return;
+  }
 
-  renderProductos();
-  closeModal();
-  PetSpot.notify('✅ Producto creado correctamente');
+  try {
+    const response = await fetch("https://localhost:443/productos", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-user-email": email
+      },
+      body: JSON.stringify({
+        nombre: nombre,
+        categoria: cat,
+        precio: precio,
+        stock: stock
+      })
+    });
 
-  // Limpiar campos
-  document.getElementById('nuevo-nombre').value = '';
-  document.getElementById('nuevo-precio').value = '';
-  document.getElementById('nuevo-stock').value  = '';
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.detail || 'Error al crear producto');
+    }
+
+    const data = await response.json();
+
+    PetSpot.notify('✅ Producto creado correctamente');
+    closeModal();
+    
+    // Limpiar campos
+    document.getElementById('nuevo-nombre').value = '';
+    document.getElementById('nuevo-precio').value = '';
+    document.getElementById('nuevo-stock').value = '';
+    
+    // Recargar productos
+    cargarMisProductos();
+
+  } catch (error) {
+    console.error('Error:', error);
+    PetSpot.notify('❌ ' + error.message);
+  }
 }
 
 function closeModal() {
@@ -208,26 +243,4 @@ function closeModal() {
   productoEditandoId = null;
 }
 
-// Pedidos mock
-var pedidos = [
-  { id: '#1024', cliente: 'María Fernández', prods: 'Pienso Premium (x2), Collar (x1)', total: '92.48€', estado: 'entregado',  fecha: '14/03/2026' },
-  { id: '#1023', cliente: 'Jordi Puig',      prods: 'Vitaminas K9 (x1)',                total: '22.00€', estado: 'en camino',  fecha: '15/03/2026' },
-  { id: '#1022', cliente: 'Ana González',    prods: 'Arena Sílice (x3), Champú (x2)',   total: '53.47€', estado: 'procesando', fecha: '16/03/2026' }
-];
-var estadoClase = { 'entregado': 'badge-green', 'en camino': 'badge-orange', 'procesando': 'badge-blue' };
-var pedidosBody = document.getElementById('pedidos-body');
-for (var i = 0; i < pedidos.length; i++) {
-  var p    = pedidos[i];
-  var fila = document.createElement('tr');
-  var td_id = document.createElement('td'); td_id.appendChild(crearEl('strong', { textContent: p.id }));
-  var td_cl = crearEl('td', { textContent: p.cliente });
-  var td_pr = crearEl('td', { textContent: p.prods, style: { maxWidth: '220px', color: 'var(--text2)' } });
-  var td_to = document.createElement('td'); td_to.appendChild(crearEl('strong', { textContent: p.total, style: { color: 'var(--accent)' } }));
-  var td_es = document.createElement('td'); td_es.appendChild(crearEl('span', { className: 'badge ' + (estadoClase[p.estado] || 'badge-gray'), textContent: p.estado }));
-  var td_fe = crearEl('td', { textContent: p.fecha });
-  fila.appendChild(td_id); fila.appendChild(td_cl); fila.appendChild(td_pr);
-  fila.appendChild(td_to); fila.appendChild(td_es); fila.appendChild(td_fe);
-  pedidosBody.appendChild(fila);
-}
-
-renderProductos();
+cargarMisProductos();
