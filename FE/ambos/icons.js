@@ -1,9 +1,5 @@
-// PetSpot — Librería de iconos SVG
-// Todos son SVGs simples y claros, sin emojis
+let Icons = {
 
-var Icons = {
-
-  // ── Navegación ──
   home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><polyline points="9 21 9 13 15 13 15 21"/></svg>',
 
   calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
@@ -20,7 +16,6 @@ var Icons = {
 
   card: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>',
 
-  // ── Acciones ──
   plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
 
   check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
@@ -55,21 +50,14 @@ var Icons = {
 
   paw: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="6" r="2"/><circle cx="17" cy="6" r="2"/><circle cx="4" cy="12" r="2"/><circle cx="20" cy="12" r="2"/><path d="M12 10c-3.5 0-6 2.5-5.5 6 .3 2 1.5 4 3.5 5 .7.3 1.3.5 2 .5s1.3-.2 2-.5c2-1 3.2-3 3.5-5 .5-3.5-2-6-5.5-6z"/></svg>',
 
-  // ── Animales — iconos simples y reconocibles ──
-
-  // Perro: silueta simple de cabeza de perro con orejas caídas
   dog: '<svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M4.5 3C3.1 3 2 4.1 2 5.5v1c0 .8.4 1.5 1 2V12a7 7 0 0014 0V8.5c.6-.5 1-1.2 1-2v-1C18 4.1 16.9 3 15.5 3c-.8 0-1.5.4-2 1h-3c-.5-.6-1.2-1-2-1z" opacity=".15"/><path d="M2 6.5C2 4.6 3.6 3 5.5 3S9 4.6 9 6.5V12a3 3 0 003 3 3 3 0 003-3V6.5C15 4.6 16.4 3 18 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="9" cy="9" r="1" fill="currentColor"/><circle cx="15" cy="9" r="1" fill="currentColor"/><path d="M10.5 12.5c.4.4 2.6.4 3 0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 3C4 3 2 4 2 6.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M19 3c1 0 3 1 3 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
 
-  // Gato: silueta clara con orejas puntiagudas
   cat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5C7 5 4 8 4 12a8 8 0 0016 0c0-4-3-7-8-7z"/><path d="M8 5L6 2"/><path d="M16 5l2-3"/><circle cx="9" cy="11" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="11" r="1" fill="currentColor" stroke="none"/><path d="M10.5 14c.4.5 2.6.5 3 0"/><path d="M12 13v1"/></svg>',
 
-  // Conejo: orejas largas y cuerpo redondo — claramente un conejo
   rabbit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="8" cy="5" rx="1.5" ry="4"/><ellipse cx="16" cy="5" rx="1.5" ry="4"/><ellipse cx="12" cy="15" rx="6" ry="5"/><circle cx="10" cy="14" r="1" fill="currentColor" stroke="none"/><circle cx="14" cy="14" r="1" fill="currentColor" stroke="none"/><path d="M10.5 17c.4.4 2.6.4 3 0"/><path d="M12 10v3"/></svg>',
 
-  // Logo PetSpot (huella en blanco para fondo de color)
   logoPaw: '<svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><ellipse cx="6" cy="5" rx="2" ry="2.5"/><ellipse cx="12" cy="3.5" rx="2" ry="2.5"/><ellipse cx="18" cy="5" rx="2" ry="2.5"/><ellipse cx="3.5" cy="11" rx="2" ry="2.5"/><path d="M12 9.5c-4 0-6.5 2.5-6 6 .3 2 1.5 4.5 3.5 5.5 1 .5 1.7.5 2.5.5s1.5 0 2.5-.5c2-1 3.2-3.5 3.5-5.5.5-3.5-2-6-6-6z"/></svg>',
 
-    // Iconos para perfiles en login/registro
   profileUser: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
   profileVet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.8 2.3A.3.3 0 105 2H4a2 2 0 00-2 2v5a6 6 0 006 6v0a6 6 0 006-6V4a2 2 0 00-2-2h-1a.2.2 0 10.3.3"/><path d="M8 15v1a6 6 0 006 6v0a6 6 0 006-6v-4"/><circle cx="20" cy="10" r="2"/></svg>'
 };

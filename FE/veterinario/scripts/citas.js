@@ -1,242 +1,223 @@
-// PetSpot — Citas del veterinario
-// Las citas se guardan en localStorage
-
 PetSpot.init('veterinario');
 buildVetLayout('citas');
 
-ponerIcono(document.getElementById('icon-plus'),   Icons.plus);
 ponerIcono(document.getElementById('icon-search'), Icons.search);
+ponerIcono(document.getElementById('icon-plus'),   Icons.plus);
 ponerIcono(document.getElementById('icon-x'),      Icons.x);
 
-// Abrir modal de nueva cita
-document.getElementById('btn-nueva').addEventListener('click', function() {
-  document.getElementById('modal-nueva').classList.add('open');
-});
+let citas = [];
+let filtroActual = 'todas';
 
-// Cargar citas guardadas
-var listaCitas = Almacen.cargar('citas_vet');
-var filtroActivo = 'todas';
+// TODAS LAS DEL VETERINARIO LOGEADO
+const cargarCitas = async function() {
+  try {
+    let email = localStorage.getItem('user_email');
+    let response = await fetch(`https://localhost:443/citas/veterinario/mis-citas`, { // HACER BIEN EL FECTH
+      headers: { 'x-user-email': email }
+    });
+    if (!response.ok) throw new Error('Error al cargar citas');
+    citas = await response.json();
+    renderCitas();
+  } catch (error) {
+    console.error('Error:', error);
+    PetSpot.notify('Error al cargar citas');
+  }
+};
 
-// Icono según especie
-function iconoPorEspecie(especie) {
-  if (especie === 'Gato') return Icons.cat;
-  if (especie === 'Perro') return Icons.dog;
-  return Icons.paw;
-}
-
-// ============================================================
-// RENDER DE CITAS EN LA TABLA
-// ============================================================
-function renderCitas(datos) {
-  var tbody = document.getElementById('citas-body');
+const renderCitas = function() {
+  let tbody = document.getElementById('citas-body');
   while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
 
-  if (!datos || datos.length === 0) {
-    var fila = document.createElement('tr');
-    var celda = document.createElement('td');
+  let filtradas = citas;
+  if (filtroActual !== 'todas') {
+    filtradas = citas.filter(c => c.estado === filtroActual);
+  }
+
+  if (filtradas.length === 0) {
+    let fila = document.createElement('tr');
+    let celda = document.createElement('td');
     celda.colSpan = 7;
+    celda.textContent = 'No hay citas';
     celda.style.textAlign = 'center';
-    celda.style.color     = 'var(--text3)';
-    celda.style.padding   = '32px';
-    celda.textContent     = 'No hay citas que mostrar';
+    celda.style.color = 'var(--text3)';
+    celda.style.padding = '24px';
     fila.appendChild(celda);
     tbody.appendChild(fila);
     return;
   }
 
-  for (var i = 0; i < datos.length; i++) {
-    tbody.appendChild(crearFilaCita(datos[i]));
-  }
-}
+  for (let i = 0; i < filtradas.length; i++) {
+    let c = filtradas[i];
+    let fila = document.createElement('tr');
 
-// Crea una fila de la tabla para una cita
-function crearFilaCita(c) {
-  var fila = document.createElement('tr');
-  fila.id  = 'cita-row-' + c.id;
+    fila.appendChild(crearEl('td', { textContent: c.hora || '--:--' }));
+    fila.appendChild(crearEl('td', { textContent: c.fecha || '--/--/----' }));
+    fila.appendChild(crearEl('td', { textContent: c.cliente_nombre || 'Cliente' }));
+    fila.appendChild(crearEl('td', { textContent: c.mascota_nombre || 'Mascota' }));
+    fila.appendChild(crearEl('td', { textContent: c.motivo || '—' }));
 
-  // Hora
-  var tdHora = document.createElement('td');
-  var horaEl = crearEl('strong', { textContent: c.hora, style: { fontSize: '15px' } });
-  tdHora.appendChild(horaEl);
+    let estadoClass = '';
+    if (c.estado === 'pendiente') estadoClass = 'badge-orange';
+    if (c.estado === 'confirmada') estadoClass = 'badge-green';
+    if (c.estado === 'cancelada') estadoClass = 'badge-red';
+    if (c.estado === 'completada') estadoClass = 'badge-blue';
+    let tdEstado = document.createElement('td');
+    tdEstado.appendChild(crearEl('span', { className: 'badge ' + estadoClass, textContent: c.estado }));
+    fila.appendChild(tdEstado);
 
-  // Fecha
-  var tdFecha = crearEl('td', { textContent: c.fecha });
+    let tdAcciones = document.createElement('td');
+    let btnConfirmar = crearEl('button', { className: 'btn btn-success btn-sm', textContent: 'Confirmar' });
+    let btnCancelar = crearEl('button', { className: 'btn btn-danger btn-sm', textContent: 'Cancelar' });
+    let btnCompletar = crearEl('button', { className: 'btn btn-primary btn-sm', textContent: 'Completar' });
 
-  // Cliente
-  var tdCliente = document.createElement('td');
-  var clienteWrap = document.createElement('div');
-  clienteWrap.style.display = 'flex';
-  clienteWrap.style.alignItems = 'center';
-  clienteWrap.style.gap = '9px';
-  var avEl = crearEl('div', {
-    className: 'topbar-avatar',
-    textContent: c.cliente[0],
-    style: { width: '30px', height: '30px', fontSize: '12px', flexShrink: '0' }
-  });
-  var clienteNombre = crearEl('span', { textContent: c.cliente, style: { fontWeight: '500' } });
-  clienteWrap.appendChild(avEl);
-  clienteWrap.appendChild(clienteNombre);
-  tdCliente.appendChild(clienteWrap);
-
-  // Mascota con icono de especie
-  var tdMascota = document.createElement('td');
-  var mascotaWrap = document.createElement('div');
-  mascotaWrap.style.display = 'flex';
-  mascotaWrap.style.alignItems = 'center';
-  mascotaWrap.style.gap = '7px';
-  var iconoEspecie = document.createElement('span');
-  iconoEspecie.style.display = 'flex';
-  iconoEspecie.style.width   = '18px';
-  iconoEspecie.style.height  = '18px';
-  ponerIcono(iconoEspecie, iconoPorEspecie(c.especie || 'Perro'));
-  mascotaWrap.appendChild(iconoEspecie);
-  mascotaWrap.appendChild(document.createTextNode(c.mascota));
-  tdMascota.appendChild(mascotaWrap);
-
-  var tdMotivo = crearEl('td', { textContent: c.motivo });
-
-  // Estado (badge)
-  var tdEstado  = document.createElement('td');
-  var claseBadge = c.estado === 'confirmada' ? 'badge-green' : 'badge-orange';
-  tdEstado.appendChild(crearEl('span', { className: 'badge ' + claseBadge, textContent: c.estado }));
-
-  // Acciones
-  var tdAcciones = document.createElement('td');
-  var accionesDiv = document.createElement('div');
-  accionesDiv.style.display = 'flex';
-  accionesDiv.style.gap     = '6px';
-
-  if (c.estado === 'pendiente') {
-    var btnAceptar  = crearEl('button', { className: 'btn btn-success btn-sm', textContent: '✓ Aceptar' });
-    var btnRechazar = crearEl('button', { className: 'btn btn-danger btn-sm',  textContent: '✕ Rechazar' });
-    btnAceptar.addEventListener('click',  crearHandlerAceptar(c.id));
-    btnRechazar.addEventListener('click', crearHandlerRechazar(c.id));
-    accionesDiv.appendChild(btnAceptar);
-    accionesDiv.appendChild(btnRechazar);
-  } else {
-    var btnVer = crearEl('button', { className: 'btn btn-ghost btn-sm', textContent: 'Ver historial' });
-    btnVer.addEventListener('click', function() { PetSpot.notify('Historial del paciente (próximamente)'); });
-    accionesDiv.appendChild(btnVer);
-  }
-
-  tdAcciones.appendChild(accionesDiv);
-
-  fila.appendChild(tdHora);
-  fila.appendChild(tdFecha);
-  fila.appendChild(tdCliente);
-  fila.appendChild(tdMascota);
-  fila.appendChild(tdMotivo);
-  fila.appendChild(tdEstado);
-  fila.appendChild(tdAcciones);
-  return fila;
-}
-
-function crearHandlerAceptar(id) {
-  return function() {
-    for (var i = 0; i < listaCitas.length; i++) {
-      if (listaCitas[i].id === id) { listaCitas[i].estado = 'confirmada'; break; }
+    if (c.estado === 'pendiente') {
+      btnConfirmar.addEventListener('click', () => cambiarEstado(c.id_cita, 'confirmada'));
+      btnCancelar.addEventListener('click', () => cambiarEstado(c.id_cita, 'cancelada'));
+      tdAcciones.appendChild(btnConfirmar);
+      tdAcciones.appendChild(btnCancelar);
+    } else if (c.estado === 'confirmada') {
+      btnCompletar.addEventListener('click', () => cambiarEstado(c.id_cita, 'completada'));
+      btnCancelar.addEventListener('click', () => cambiarEstado(c.id_cita, 'cancelada'));
+      tdAcciones.appendChild(btnCompletar);
+      tdAcciones.appendChild(btnCancelar);
+    } else {
+      tdAcciones.textContent = '—';
     }
-    Almacen.guardar('citas_vet', listaCitas);
-    filtrarYRenderizar();
-    PetSpot.notify('✅ Cita confirmada');
-  };
-}
 
-function crearHandlerRechazar(id) {
-  return function() {
-    var nueva = [];
-    for (var i = 0; i < listaCitas.length; i++) {
-      if (listaCitas[i].id !== id) nueva.push(listaCitas[i]);
-    }
-    listaCitas = nueva;
-    Almacen.guardar('citas_vet', listaCitas);
-    filtrarYRenderizar();
-    PetSpot.notify('Cita rechazada');
-  };
-}
+    fila.appendChild(tdAcciones);
+    tbody.appendChild(fila);
+  }
+};
+// CAMBIA DE CONFIRMAR CANCELAR O NOSE
+const cambiarEstado = async function(id, nuevoEstado) {
+  try {
+    let email = localStorage.getItem('user_email');
+    let response = await fetch(`https://localhost:443/citas/${id}/estado`, { // HACER BIEN EL FETCH
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'x-user-email': email },
+      body: JSON.stringify({ estado: nuevoEstado })
+    });
+    if (!response.ok) throw new Error('Error al actualizar');
+    PetSpot.notify('Cita ' + nuevoEstado);
+    cargarCitas();
+  } catch (error) {
+    console.error('Error:', error);
+    PetSpot.notify('Error al actualizar la cita');
+  }
+};
 
-function filtrarYRenderizar() {
-  var datos = [];
-  for (var i = 0; i < listaCitas.length; i++) {
-    if (filtroActivo === 'todas' || listaCitas[i].estado === filtroActivo) {
-      datos.push(listaCitas[i]);
+const filterCitas = function(tipo, el) {
+  filtroActual = tipo;
+  let tabs = document.querySelectorAll('.tab');
+  for (let i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
+  if (el) el.classList.add('active');
+  renderCitas();
+};
+
+const searchCitas = function(texto) {
+  let tbody = document.getElementById('citas-body');
+  let filas = tbody.querySelectorAll('tr');
+  for (let i = 0; i < filas.length; i++) {
+    let fila = filas[i];
+    let textoFila = fila.textContent.toLowerCase();
+    if (texto === '' || textoFila.indexOf(texto.toLowerCase()) !== -1) {
+      fila.style.display = '';
+    } else {
+      fila.style.display = 'none';
     }
   }
-  renderCitas(datos);
-}
+};
 
-function filterCitas(tipo, el) {
-  filtroActivo = tipo;
-  var tabs = document.querySelectorAll('.tab');
-  for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
-  el.classList.add('active');
-  filtrarYRenderizar();
-}
+const closeModal = function() {
+  let modales = document.querySelectorAll('.modal-overlay');
+  for (let i = 0; i < modales.length; i++) modales[i].classList.remove('open');
+};
 
-function searchCitas(q) {
-  var busq  = q.toLowerCase();
-  var datos = [];
-  for (var i = 0; i < listaCitas.length; i++) {
-    var c = listaCitas[i];
-    if (c.cliente.toLowerCase().indexOf(busq) !== -1 ||
-        c.mascota.toLowerCase().indexOf(busq) !== -1 ||
-        c.motivo.toLowerCase().indexOf(busq)  !== -1) {
-      datos.push(c);
-    }
-  }
-  renderCitas(datos);
-}
+const addCita = async function() {
+  let clienteId = document.getElementById('nueva-cliente').value;
+  let mascotaId = document.getElementById('nueva-mascota').value;
+  let motivo = document.getElementById('nueva-motivo').value.trim();
+  let fecha = document.getElementById('nueva-fecha').value;
+  let hora = document.getElementById('nueva-hora').value;
 
-// ============================================================
-// CREAR NUEVA CITA
-// ============================================================
-function closeModal() {
-  var modales = document.querySelectorAll('.modal-overlay');
-  for (var i = 0; i < modales.length; i++) modales[i].classList.remove('open');
-}
-
-function addCita() {
-  var cliente = document.getElementById('nueva-cliente').value.trim();
-  var mascota = document.getElementById('nueva-mascota').value.trim();
-  var motivo  = document.getElementById('nueva-motivo').value.trim();
-  var fecha   = document.getElementById('nueva-fecha').value;
-  var hora    = document.getElementById('nueva-hora').value;
-
-  // Validación — todos los campos son obligatorios
-  if (!cliente || !mascota || !motivo || !fecha || !hora) {
-    PetSpot.notify('Por favor, rellena todos los campos');
+  if (!clienteId || !mascotaId || !motivo || !fecha || !hora) {
+    PetSpot.notify('Rellena todos los campos');
     return;
   }
 
-  // Convertir fecha
-  var partes       = fecha.split('-');
-  var fechaLegible = partes[2] + '/' + partes[1];
+  try {
+    let email = localStorage.getItem('user_email');
+    // CREA NUEV CITA
+    let response = await fetch(`https://localhost:443/citas`, { // HACER BIEN EL FETCH
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-user-email': email },
+      body: JSON.stringify({
+        cliente_id: clienteId,
+        mascota_id: mascotaId,
+        motivo: motivo,
+        fecha: fecha,
+        hora: hora
+      })
+    });
+    if (!response.ok) throw new Error('Error al crear cita');
+    PetSpot.notify('Cita creada correctamente');
+    closeModal();
+    cargarCitas();
+  } catch (error) {
+    console.error('Error:', error);
+    PetSpot.notify('Error al crear la cita');
+  }
+};
 
-  // Crear la cita
-  var nueva = {
-    id:       Date.now(),
-    hora:     hora,
-    fecha:    fechaLegible,
-    cliente:  cliente,
-    mascota:  mascota,
-    especie:  'Perro', // Por defecto; en una versión real vendría del perfil del cliente
-    motivo:   motivo,
-    estado:   'confirmada' // El vet la crea directamente como confirmada
-  };
+document.getElementById('btn-nueva').addEventListener('click', function() {
+  cargarClientesMascotas();
+  document.getElementById('modal-nueva').classList.add('open');
+});
 
-  listaCitas.push(nueva);
-  Almacen.guardar('citas_vet', listaCitas);
-  filtrarYRenderizar();
-  closeModal();
+const cargarClientesMascotas = async function() {
+  try {
+    let email = localStorage.getItem('user_email');
+    // LISTA DE LOS CLIENTES DEL VET LOGEADO
+    let response = await fetch(`https://localhost:443/clientes`, { // HACER BIEN EL FETCH
+      headers: { 'x-user-email': email }
+    });
+    if (!response.ok) throw new Error('Error al cargar clientes');
+    let clientes = await response.json();
+    let selectCliente = document.getElementById('nueva-cliente');
+    while (selectCliente.options.length > 1) selectCliente.remove(1);
+    for (let i = 0; i < clientes.length; i++) {
+      let option = document.createElement('option');
+      option.value = clientes[i].id_cliente;
+      option.textContent = clientes[i].nombre;
+      selectCliente.appendChild(option);
+    }
+  } catch (error) {
+    console.error('Error:', error);
+  }
+};
 
-  // Limpiar campos del formulario
-  document.getElementById('nueva-cliente').value = '';
-  document.getElementById('nueva-mascota').value = '';
-  document.getElementById('nueva-motivo').value  = '';
-  document.getElementById('nueva-fecha').value   = '';
+document.getElementById('nueva-cliente').addEventListener('change', async function() {
+  let clienteId = this.value;
+  if (!clienteId) return;
+  try {
+    let email = localStorage.getItem('user_email');
+    // LAS MASCOTAS DEUN LCIENTE EN ESPECIFICO
+    let response = await fetch(`https://localhost:443/mascotas/cliente/${clienteId}`, { // HACER BIEN EL FECTH
+      headers: { 'x-user-email': email }
+    });
+    if (!response.ok) throw new Error('Error al cargar mascotas');
+    let mascotas = await response.json();
+    let selectMascota = document.getElementById('nueva-mascota');
+    while (selectMascota.options.length > 1) selectMascota.remove(1);
+    for (let i = 0; i < mascotas.length; i++) {
+      let option = document.createElement('option');
+      option.value = mascotas[i].id_mascota;
+      option.textContent = mascotas[i].nombre;
+      selectMascota.appendChild(option);
+    }
+  } catch (error) {
+    console.error('Error:', error);
+  }
+});
 
-  PetSpot.notify('✅ Cita añadida correctamente');
-}
-
-// ── Render inicial ──
-filtrarYRenderizar();
+cargarCitas();

@@ -1,5 +1,3 @@
-/* ============ CLIENTE — INICIO ============ */
-
 .date-chip {
   font-size: 13px;
   color: var(--text2);
@@ -42,7 +40,12 @@
   margin: 0 auto 12px;
   transition: background 0.18s;
 }
-.quick-icon svg { width: 26px; height: 26px; stroke: var(--text2); transition: stroke 0.18s; }
+.quick-icon svg { 
+  width: 26px; 
+  height: 26px; 
+  stroke: var(--text2); 
+  transition: stroke 0.18s; 
+}
 .quick-btn:hover .quick-icon { background: var(--accent-light); }
 .quick-btn:hover .quick-icon svg { stroke: var(--accent); }
 .quick-label {
@@ -65,4 +68,8 @@
   gap: 12px;
 }
 
-.card-title svg { width: 18px; height: 18px; flex-shrink: 0; }
+.card-title svg { 
+  width: 18px; 
+  height: 18px; 
+  flex-shrink: 0; 
+}

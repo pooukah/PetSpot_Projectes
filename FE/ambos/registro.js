@@ -1,47 +1,105 @@
-// PetSpot — Registro de nuevo usuario
+////////////////////////////////////////////////////////// DOM
+const optCliente = document.getElementById('opt-cliente');
+const optVet = document.getElementById('opt-vet');
+const btnRegistro = document.getElementById('btn-registro');
+const regNombre = document.getElementById('reg-nombre');
+const regApellidos = document.getElementById('reg-apellidos');
+const regEmail = document.getElementById('reg-email');
+const regTelefono = document.getElementById('reg-telefono');
+const regPass = document.getElementById('reg-pass');
+const regPass2 = document.getElementById('reg-pass2');
+const vetFields = document.getElementById('vet-fields');
+const regClinica = document.getElementById('reg-clinica');
+const msgNoClinica = document.getElementById('msg-no-clinica');
+const loginThemeToggle = document.getElementById('login-theme-toggle');
+const loginThemeIcon = document.getElementById('login-theme-icon');
+const logoIcon = document.getElementById('logo-icon');
+const iconCliente = document.getElementById('icon-cliente');
+const iconVet = document.getElementById('icon-vet');
 
-var perfilSeleccionado = null;
+////////////////////////////////////////////////////////// VARIABLES
+let perfilSeleccionado = null;
 
-function seleccionarPerfil(tipo) {
+////////////////////////////////////////////////////////// FUNCIONES
+const seleccionarPerfil = function(tipo) {
   perfilSeleccionado = tipo;
 
   document.body.classList.remove('cliente', 'veterinario');
   document.body.classList.add(tipo);
 
-  document.getElementById('opt-cliente').classList.toggle('active', tipo === 'cliente');
-  document.getElementById('opt-vet').classList.toggle('active', tipo === 'veterinario');
+  optCliente.classList.toggle('active', tipo === 'cliente');
+  optVet.classList.toggle('active', tipo === 'veterinario');
 
   if (tipo === 'veterinario') {
-    document.getElementById('vet-fields').style.display = 'block';
+    vetFields.style.display = 'block';
   } else {
-    document.getElementById('vet-fields').style.display = 'none';
-    document.getElementById('msg-no-clinica').style.display = 'none';
+    vetFields.style.display = 'none';
+    msgNoClinica.style.display = 'none';
   }
-}
+};
 
-function comprobarClinica() {
-  var clinica = document.getElementById('reg-clinica').value;
-  var msgNoClinica = document.getElementById('msg-no-clinica');
+const comprobarClinica = function() {
+  let clinica = regClinica.value;
 
   if (clinica === 'no-encuentro') {
     msgNoClinica.style.display = 'block';
   } else {
     msgNoClinica.style.display = 'none';
   }
-}
+};
 
-async function registrarse() {
+const actualizarIconoTema = function() {
+  let oscuro = localStorage.getItem('ps_dark') !== 'false';
+  ponerIcono(loginThemeIcon, oscuro ? Icons.moon : Icons.sun);
+  loginThemeToggle.classList.toggle('on', !oscuro);
+
+  iconCliente.innerHTML = Icons.profileUser || Icons.user;
+  iconVet.innerHTML = Icons.profileVet || Icons.stethoscope;
+};
+
+const cargarClinicas = async function() {
+  const API_URL = "https://localhost:443/clinicas/registro";
+  try {
+    const resposta = await fetch(API_URL, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' }
+    });
+    
+    if (!resposta.ok) {
+      throw new Error("No se pudieron cargar las clínicas");
+    }
+    
+    const clinicas = await resposta.json();
+    
+    if (regClinica) {
+      while (regClinica.options.length > 1) {
+        regClinica.remove(1);
+      }
+      
+      for (let i = 0; i < clinicas.length; i++) {
+        const option = document.createElement('option');
+        option.value = clinicas[i].nombre;
+        option.textContent = clinicas[i].nombre;
+        regClinica.appendChild(option);
+      }
+    }
+  } catch (error) {
+    console.log("Error cargando clínicas:", error);
+  }
+};
+
+const registrarse = async function() {
   if (!perfilSeleccionado) {
     PetSpot.notify('Por favor, selecciona un perfil');
     return;
   }
 
-  var nombre    = document.getElementById('reg-nombre').value.trim();
-  var apellidos = document.getElementById('reg-apellidos').value.trim();
-  var email     = document.getElementById('reg-email').value.trim();
-  var telefono  = document.getElementById('reg-telefono').value.trim();
-  var pass      = document.getElementById('reg-pass').value;
-  var pass2     = document.getElementById('reg-pass2').value;
+  let nombre = regNombre.value.trim();
+  let apellidos = regApellidos.value.trim();
+  let email = regEmail.value.trim();
+  let telefono = regTelefono.value.trim();
+  let pass = regPass.value;
+  let pass2 = regPass2.value;
 
   if (!nombre || !apellidos || !email || !pass) {
     PetSpot.notify('Por favor, rellena todos los campos');
@@ -58,7 +116,7 @@ async function registrarse() {
     return;
   }
 
-  var datos = {
+  let datos = {
     nombre: nombre,
     apellidos: apellidos,
     email: email,
@@ -66,17 +124,16 @@ async function registrarse() {
     password: pass
   };
 
-  var url = "";
+  let url = "";
 
   if (perfilSeleccionado === 'cliente') {
     url = "https://localhost:443/auth/registro/cliente";
   } else {
     url = "https://localhost:443/auth/registro/veterinario";
     
-    var clinicaSelect = document.getElementById('reg-clinica');
-    var clinicaNombre = clinicaSelect.options[clinicaSelect.selectedIndex]?.text;
+    let clinicaNombre = regClinica.options[regClinica.selectedIndex]?.text;
     
-    if (!clinicaNombre || clinicaSelect.value === 'no-encuentro' || clinicaSelect.value === '') {
+    if (!clinicaNombre || regClinica.value === 'no-encuentro' || regClinica.value === '') {
       PetSpot.notify('Debes seleccionar una clínica registrada en PetSpot');
       return;
     }
@@ -98,7 +155,7 @@ async function registrarse() {
     const data = await resposta.json();
     console.log(data);
     
-    PetSpot.notify('✅ Cuenta creada correctamente. Ahora puedes iniciar sesión.');
+    PetSpot.notify('Cuenta creada correctamente.');
 
     setTimeout(function() {
       window.location.href = 'index.html';
@@ -106,67 +163,38 @@ async function registrarse() {
 
   } catch (error) {
     console.log('ERROR:', error);
-    PetSpot.notify('❌ Error: ' + error.message);
+    PetSpot.notify('Error: ' + error.message);
   }
-}
+};
 
-// ── Al cargar la página ──
-(function() {
-  async function cargarClinicas() {
-    const API_URL = "https://localhost:443/clinicas/registro";
-    try {
-      const resposta = await fetch(API_URL, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-        }
-      });
-      
-      if (!resposta.ok) {
-        throw new Error("No se pudieron cargar las clínicas");
-      }
-      
-      const clinicas = await resposta.json();
-      const select = document.getElementById('reg-clinica');
-      
-      if (select) {
-        while (select.options.length > 1) {
-          select.remove(1);
-        }
-        
-        for (let i = 0; i < clinicas.length; i++) {
-          const option = document.createElement('option');
-          option.value = clinicas[i].nombre;  // ← guardar el nombre, no el id
-          option.textContent = clinicas[i].nombre;
-          select.appendChild(option);
-        }
-      }
-    } catch (error) {
-      console.log("Error cargando clínicas:", error);
-    }
-  }
-
-  cargarClinicas();
-
-  var oscuro = localStorage.getItem('ps_dark') !== 'false';
+const init = function() {
+  let oscuro = localStorage.getItem('ps_dark') !== 'false';
   document.body.classList.toggle('modoclaro', !oscuro);
 
-  ponerIcono(document.getElementById('logo-icon'), Icons.logoPaw);
-  ponerIcono(document.getElementById('icon-cliente'), Icons.user);
-  ponerIcono(document.getElementById('icon-vet'), Icons.stethoscope);
+  ponerIcono(logoIcon, Icons.logoPaw);
+  ponerIcono(iconCliente, Icons.user);
+  ponerIcono(iconVet, Icons.stethoscope);
 
   actualizarIconoTema();
+  cargarClinicas();
 
-  document.getElementById('login-theme-toggle').addEventListener('click', function() {
+  loginThemeToggle.addEventListener('click', function() {
     PetSpot.toggleTheme();
     actualizarIconoTema();
   });
-})();
+};
+init();
 
-function actualizarIconoTema() {
-  var oscuro = localStorage.getItem('ps_dark') !== 'false';
-  ponerIcono(document.getElementById('login-theme-icon'), oscuro ? Icons.moon : Icons.sun);
-  document.getElementById('login-theme-toggle').classList.toggle('on', !oscuro);
-  document.getElementById('icon-cliente').innerHTML = Icons.profileUser || Icons.user;
-  document.getElementById('icon-vet').innerHTML = Icons.profileVet || Icons.stethoscope;
-}
+////////////////////////////////////////////////////////// ADD EVENT LISTENERS
+optCliente.addEventListener('click', function() {
+  seleccionarPerfil('cliente');
+});
+optVet.addEventListener('click', function() {
+  seleccionarPerfil('veterinario');
+});
+btnRegistro.addEventListener('click', function() {
+  registrarse();
+});
+regClinica.addEventListener('change', function() {
+  comprobarClinica();
+});

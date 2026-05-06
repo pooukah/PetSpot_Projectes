@@ -1,5 +1,3 @@
-/* ============ CLIENTE — CITAS ============ */
-
 .cal-grid-wrap {
   display: grid;
   grid-template-columns: 340px 1fr;
@@ -47,7 +45,10 @@
   position: relative;
 }
 .cal-day:hover { background: var(--bg3); }
-.cal-day.today { background: var(--accent); color: #fff; font-weight: 800; }
+.cal-day.today { 
+  background: var(--accent); 
+  color: #fff; font-weight: 800; 
+}
 .cal-day.has-cita::after {
   content: '';
   position: absolute;

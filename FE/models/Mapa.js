@@ -14,13 +14,13 @@ export class Mapa {
     }).addTo(this.#map);
   }
 
-  // Obtener la ubicación del usuario (sin popup automático)
+  // obtener la ubicación del usuario (sin popup automático)
   obtenirPosicio() {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const latitude = pos.coords.latitude;
         const longitude = pos.coords.longitude;
-        // Solo centra el mapa, no añade marcador
+        // solo centra el mapa, no añade marcador
         this.#map.setView([latitude, longitude], 13);
       },
       (error) => {
@@ -30,17 +30,17 @@ export class Mapa {
     );
   }
 
-  // Pintar un marcador con popup
+  // pintar un marcador con popup
   pintarPunt(lat, long, desc) {
     L.marker([lat, long]).addTo(this.#map).bindPopup(desc).openPopup();
   }
 
-  // Centrar el mapa en una posición
+  // centrar el mapa en una posición
   posicionarMapa(lat, long) {
     this.#map.setView([lat, long], 16);
   }
 
-  // Borrar todos los marcadores
+  // borrar todos los marcadores
   borrarPunts() {
     this.#map.eachLayer((layer) => {
       if (layer instanceof L.Marker) {

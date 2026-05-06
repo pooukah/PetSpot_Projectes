@@ -1,5 +1,3 @@
-/* ============ VETERINARIO — SUSCRIPCIÓN ============ */
-
 .current-plan-chip {
   display: flex;
   align-items: center;
@@ -11,7 +9,11 @@
   font-size: 13px;
   color: var(--text2);
 }
-.current-plan-chip svg { width: 14px; height: 14px; stroke: var(--accent); }
+.current-plan-chip svg { 
+  width: 14px; 
+  height: 14px; 
+  stroke: var(--accent); 
+}
 .current-plan-chip strong { color: var(--accent); }
 
 .plans-grid {
@@ -28,30 +30,49 @@
   position: relative;
   transition: all 0.18s ease;
 }
-.plan-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+.plan-card:hover { 
+  transform: translateY(-3px); 
+  box-shadow: var(--shadow); 
+}
 .plan-card.current-plan { border-color: var(--accent); }
 .plan-card.popular-plan { border-color: var(--accent); }
 
 .plan-badge {
   position: absolute;
-  top: -12px; left: 50%;
+  top: -12px; 
+  left: 50%;
   transform: translateX(-50%);
-  font-size: 11px; font-weight: 700;
+  font-size: 11px; 
+  font-weight: 700;
   padding: 3px 16px;
   border-radius: 20px;
   white-space: nowrap;
 }
-.plan-badge.current-badge { background: var(--accent); color: #fff; }
-.plan-badge.popular-badge { background: var(--bg3); color: var(--accent); border: 1px solid var(--accent); }
+.plan-badge.current-badge { 
+  background: var(--accent); 
+  color: #fff; 
+}
+.plan-badge.popular-badge { 
+  background: var(--bg3); 
+  color: var(--accent); 
+  border: 1px solid var(--accent); 
+}
 
 .plan-icon {
-  width: 52px; height: 52px;
+  width: 52px; 
+  height: 52px;
   background: var(--accent-light);
   border-radius: 14px;
-  display: flex; align-items: center; justify-content: center;
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
   margin-bottom: 14px;
 }
-.plan-icon svg { width: 28px; height: 28px; stroke: var(--accent); }
+.plan-icon svg {
+  width: 28px; 
+  height: 28px; 
+  stroke: var(--accent); 
+}
 
 .plan-name {
   font-family: 'Syne', sans-serif;
@@ -59,7 +80,11 @@
   font-weight: 800;
   margin-bottom: 4px;
 }
-.plan-desc { font-size: 13px; color: var(--text2); margin-bottom: 14px; }
+.plan-desc { 
+  font-size: 13px; 
+  color: var(--text2); 
+  margin-bottom: 14px; 
+}
 
 .plan-price {
   display: flex;
@@ -74,9 +99,15 @@
   color: var(--accent);
   line-height: 1;
 }
-.plan-price .period { font-size: 13px; color: var(--text2); }
+.plan-price .period { 
+  font-size: 13px; 
+  color: var(--text2); 
+}
 
-.plan-features { list-style: none; margin-bottom: 20px; }
+.plan-features { 
+  list-style: none; 
+  margin-bottom: 20px; 
+}
 .plan-features li {
   display: flex;
   align-items: center;
@@ -87,7 +118,11 @@
   border-bottom: 1px solid var(--border);
 }
 .plan-features li:last-child { border-bottom: none; }
-.plan-features li svg { width: 14px; height: 14px; flex-shrink: 0; }
+.plan-features li svg { 
+  width: 14px; 
+  height: 14px; 
+  flex-shrink: 0; 
+}
 .plan-features li.enabled svg  { stroke: var(--accent); }
 .plan-features li.disabled { opacity: 0.4; }
 .plan-features li.disabled svg { stroke: var(--text3); }

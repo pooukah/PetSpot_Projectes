@@ -1,75 +1,5 @@
-// construye la sidebar, topbar y los iconos de la página
-// innerHTML solo para insertar los svgs (LO SIENTO ORIOL)
-
-
-function ponerIcono(contenedor, svgString) {
-  // vaciamos el contenedor
-  while (contenedor.firstChild) contenedor.removeChild(contenedor.firstChild);
-  // insertamos svg
-  contenedor.innerHTML = svgString;
-  const svg = contenedor.firstElementChild;
-  // ajustamos tamaño
-  if (svg) {
-    svg.setAttribute('width', '100%');
-    svg.setAttribute('height', '100%');
-  }
-}
-// buscamos los elementos html icon-x 
-function cargarIconosPagina() {
-  const aux = {
-    cal: 'calendar',
-    euro: 'euro',
-    users: 'users',
-    alert: 'alert',       
-    home: 'home',
-    chat: 'chat',
-    map: 'map',
-    shop: 'shop',
-    user: 'user',
-    chart: 'chart',
-    card: 'card',
-    plus: 'plus',
-    check: 'check',
-    x: 'x',
-    edit: 'edit',
-    trash: 'trash',
-    send: 'send',
-    search: 'search',
-    logout: 'logout',
-    moon: 'moon',
-    sun: 'sun',
-    box: 'box',
-    pin: 'pin',
-    phone: 'phone',
-    stethoscope: 'stethoscope',
-    paw: 'paw',
-    dog: 'dog',
-    cat: 'cat',
-    rabbit: 'rabbit'
-  };
-
-  // aqui ponemos el icono que corresponda a lo de arriba
-  for (let el in aux) {
-    const elemento = document.getElementById(`icon-${el}`);
-    if (elemento && Icons[aux[el]]) {
-      ponerIcono(elemento, Icons[aux[el]]);
-    }
-  }
-}
-
-// si props no se pasa, sera un obj vacio
-// se llama desde lo de crearloslayouts
-function crearEl(tag, props = {}) {
-  const el = document.createElement(tag);
-  if (props.className) el.className = props.className;
-  if (props.textContent) el.textContent = props.textContent;
-  if (props.id) el.id = props.id;
-  if (props.href) el.href = props.href;
-  return el;
-}
-
 // las opciones que tendra el cliente, lo crea
-function buildClienteLayout(paginaActiva) {
+const buildClienteLayout = function(paginaActiva) {
   const nav = [
     { id: 'inicio', icon: Icons.home,     label: 'Inicio'   },
     { id: 'citas',  icon: Icons.calendar, label: 'Citas'    },
@@ -79,10 +9,10 @@ function buildClienteLayout(paginaActiva) {
     { id: 'perfil', icon: Icons.user,     label: 'Mi Perfil'}
   ];
   construirLayout(paginaActiva, nav, 'cliente');
-}
+};
 
 // lo mismo pero de vet
-function buildVetLayout(paginaActiva) {
+const buildVetLayout = function(paginaActiva) {
   const plan = PetSpot.getPlan();
   const nav = [
     { id: 'inicio',      icon: Icons.home,     label: 'Inicio'      },
@@ -92,15 +22,34 @@ function buildVetLayout(paginaActiva) {
     { id: 'suscripcion', icon: Icons.card,     label: 'Suscripción' },
     { id: 'perfil',      icon: Icons.user,     label: 'Mi Perfil'   }
   ];
-  // ESTO ES OPCIONAL, BORRALO SINO
   if (plan === 'enterprise') {
     nav.splice(4, 0, { id: 'analiticas', icon: Icons.chart, label: 'Analíticas' });
   }
   construirLayout(paginaActiva, nav, 'veterinario');
+};
+
+// buscamos los elementos html icon-x 
+const cargarIconosPagina = function() {
+  const aux = {
+    cal: 'calendar', euro: 'euro', users: 'users', alert: 'alert',       
+    home: 'home', chat: 'chat', map: 'map', shop: 'shop', 
+    user: 'user', chart: 'chart', card: 'card', plus: 'plus', 
+    check: 'check', x: 'x', edit: 'edit', trash: 'trash', 
+    send: 'send', search: 'search', logout: 'logout', moon: 'moon', 
+    sun: 'sun', box: 'box', pin: 'pin', phone: 'phone', 
+    stethoscope: 'stethoscope', paw: 'paw', dog: 'dog', cat: 'cat', rabbit: 'rabbit'
+  };
+
+  for (let el in aux) {
+    const elemento = document.getElementById(`icon-${el}`);
+    if (elemento && Icons[aux[el]]) {
+      ponerIcono(elemento, Icons[aux[el]]);
+    }
+  }
 }
 
 // esto construye lo que le pasemos de las dos funciones de arriba
-function construirLayout(paginaActiva, nav, tipo) {
+const construirLayout = function(paginaActiva, nav, tipo) {
   const oscuro = localStorage.getItem('ps_dark') !== 'false';
 
   // SIDEBAR 
@@ -116,12 +65,11 @@ function construirLayout(paginaActiva, nav, tipo) {
   logoDiv.appendChild(logoNombre);
   sidebar.appendChild(logoDiv);
 
-  // SIDEBAR
+  // SIDEBAR NAV
   const navEl = crearEl('nav', { className: 'sidebar-nav' });
   const navLabel = crearEl('div', { className: 'nav-label', textContent: 'Menú' });
   navEl.appendChild(navLabel);
 
-  //menu
   nav.forEach(item => {
     const link = document.createElement('a');
     link.href = `${item.id}.html`;
@@ -144,7 +92,7 @@ function construirLayout(paginaActiva, nav, tipo) {
 
   sidebar.appendChild(navEl);
 
-  // MODO OSCURO...
+  // BOTTOM SECTION
   const bottom = crearEl('div', { className: 'sidebar-bottom' });
 
   const themeRow = crearEl('div', { className: 'theme-toggle-row' });
@@ -160,7 +108,6 @@ function construirLayout(paginaActiva, nav, tipo) {
   const themeLabel = crearEl('span', { textContent: oscuro ? 'Modo claro' : 'Modo oscuro' });
   themeLabel.id = 'theme-label';
 
-  // botondemodoscuroyblanco
   const themeToggle = crearEl('div', { className: 'toggle-switch' + (!oscuro ? ' on' : '') });
   themeToggle.id = 'theme-toggle';
 
@@ -169,7 +116,6 @@ function construirLayout(paginaActiva, nav, tipo) {
   themeRow.appendChild(themeToggle);
   bottom.appendChild(themeRow);
 
-  // LO DE CERRAR SESION
   const logoutBtn = crearEl('button', { className: 'btn-logout', id: 'logout-btn' });
   const logoutIconSpan = document.createElement('span');
   logoutIconSpan.style.display = 'flex';
@@ -184,7 +130,7 @@ function construirLayout(paginaActiva, nav, tipo) {
 
   sidebar.appendChild(bottom);
 
-  // TOPBAR, lo de olamaria
+  // TOPBAR
   const topbar = document.createElement('header');
   topbar.className = 'topbar';
 
@@ -221,4 +167,4 @@ function construirLayout(paginaActiva, nav, tipo) {
   });
 
   cargarIconosPagina();
-}
+};

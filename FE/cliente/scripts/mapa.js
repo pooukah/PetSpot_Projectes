@@ -3,13 +3,13 @@ import { Mapa } from "../../models/Mapa.js";
 PetSpot.init('cliente');
 buildClienteLayout('mapa');
 
-var mapaInstance = null;    
-var marcadores = [];      
-var clinicas = [];
-var clinicasFiltradas = [];   
-var filtroActivo = 'todas'; 
+let mapaInstance = null;    
+let marcadores = [];      
+let clinicas = [];
+let clinicasFiltradas = [];   
+let filtroActivo = 'todas'; 
 
-async function cargarClinicas(){
+const cargarClinicas = async function(){
   const API_URL = "https://localhost:443/clinicas";
   console.log('1. Iniciando fetch...');
   try{
@@ -29,9 +29,9 @@ async function cargarClinicas(){
     console.error('ERROR en cargarClinicas:', error);
     PetSpot.notify("ERROR: al cargar clinicas");
   }
-}
+};
 
-function iniciarMapa(){
+const iniciarMapa = function(){
   const bcn = { lat:41.3874, lng:2.1686 };
   mapaInstance = new Mapa(bcn.lat, bcn.lng);
   mapaInstance.obtenirPosicio();
@@ -39,11 +39,10 @@ function iniciarMapa(){
   if (clinicasFiltradas.length > 0) {
     actualizarMarcadores();
   }
-}
+};
 
-// Devuelve el estilo oscuro o claro del mapa según el tema actual
-function obtenerEstiloMapa() {
-  var oscuro = localStorage.getItem('ps_dark') !== 'false';
+const obtenerEstiloMapa = function() {
+  let oscuro = localStorage.getItem('ps_dark') !== 'false';
   if (!oscuro) return []; 
   return [
     { elementType: 'geometry',              stylers: [{ color: '#1e2535' }] },
@@ -54,9 +53,9 @@ function obtenerEstiloMapa() {
     { featureType: 'water', elementType: 'geometry',       stylers: [{ color: '#0f1117' }] },
     { featureType: 'poi',   elementType: 'geometry',       stylers: [{ color: '#1e2535' }] }
   ];
-}
+};
 
-function aplicarFiltro(tipo, chipEl) {
+const aplicarFiltro = function(tipo, chipEl) {
   filtroActivo = tipo;
 
   const chips = document.querySelectorAll('.filter-chip');
@@ -76,9 +75,9 @@ function aplicarFiltro(tipo, chipEl) {
   }
   renderListaClinicas();
   actualizarMarcadores();
-}
+};
 
-function actualizarMarcadores() {
+const actualizarMarcadores = function() {
   if (!mapaInstance) return;
   
   mapaInstance.borrarPunts();
@@ -89,14 +88,14 @@ function actualizarMarcadores() {
       <h3>${c.nombre}</h3>
       <p>${c.direccion}</p>
       <p>⭐ ${c.valoracion || 0}/5</p>
-      ${c.tiene_24h ? '<p>🕐 24h</p>' : ''}
-      ${c.tiene_urgencias ? '<p>🚨 Urgencias</p>' : ''}
+      ${c.tiene_24h ? '<p>24h</p>' : ''}
+      ${c.tiene_urgencias ? '<p>Urgencias</p>' : ''}
     `;
     mapaInstance.pintarPunt(c.latitud, c.longitud, popupContent);
   }
-}
+};
 
-function renderListaClinicas() {
+const renderListaClinicas = function() {
   const lista = document.getElementById('clinicas-list');
   while (lista.firstChild) lista.removeChild(lista.firstChild);
 
@@ -111,9 +110,9 @@ function renderListaClinicas() {
   for (let i = 0; i < clinicasFiltradas.length; i++) {
     lista.appendChild(crearCardClinica(clinicasFiltradas[i], i));
   }
-}
+};
 
-function seleccionarClinica(idx) {
+const seleccionarClinica = function(idx) {
   const cards = document.querySelectorAll('.clinic-card');
   for (let i = 0; i < cards.length; i++) {
     cards[i].classList.toggle('active', parseInt(cards[i].dataset.idx) === idx);
@@ -124,9 +123,9 @@ function seleccionarClinica(idx) {
   if (mapaInstance && clinicasFiltradas[idx]) {
     mapaInstance.posicionarMapa(clinicasFiltradas[idx].latitud, clinicasFiltradas[idx].longitud);
   }
-}
+};
 
-function crearCardClinica(c, idx) {
+const crearCardClinica = function(c, idx) {
   const card = crearEl('div', { className: 'clinic-card' });
   card.dataset.idx = idx;
 
@@ -163,7 +162,7 @@ function crearCardClinica(c, idx) {
   card.appendChild(metaRow);
   card.addEventListener('click', () => seleccionarClinica(idx));
   return card;
-}
+};
 
 document.addEventListener('DOMContentLoaded', async function() {
   await cargarClinicas();

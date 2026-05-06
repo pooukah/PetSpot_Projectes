@@ -1,5 +1,3 @@
-/* ============ LOGIN PAGE ============ */
-
 body {
   display: flex;
   align-items: center;
@@ -41,8 +39,15 @@ body {
   color: var(--text2);
 }
 body.cliente .login-logo-icon,
-body.veterinario .login-logo-icon { background: var(--accent); border-color: var(--accent); color: #fff; }
-.login-logo-icon svg { width: 26px; height: 26px; }
+body.veterinario .login-logo-icon { 
+  background: var(--accent); 
+  border-color: var(--accent); 
+  color: #fff; 
+}
+.login-logo-icon svg { 
+  width: 26px; 
+  height: 26px; 
+}
 .login-logo-name {
   font-family: 'DM Sans', sans-serif;
   font-size: 24px;
@@ -87,10 +92,17 @@ body.veterinario .login-logo-name { color: var(--accent); }
   background: var(--accent-light);
 }
 .profile-opt-icon {
-  display: flex; align-items: center; justify-content: center;
-  height: 32px; margin-bottom: 6px;
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  height: 32px; 
+  margin-bottom: 6px;
 }
-.profile-opt-icon svg { width: 26px; height: 26px; color: var(--text2); }
+.profile-opt-icon svg { 
+  width: 26px; 
+  height: 26px; 
+  color: var(--text2); 
+}
 .profile-opt.active .profile-opt-icon svg { color: var(--accent); }
 .profile-opt-label {
   font-size: 13px;
@@ -106,13 +118,14 @@ body.veterinario .login-logo-name { color: var(--accent); }
   font-size: 15px;
   margin-top: 4px;
   border-radius: 10px;
-  /* Sin perfil seleccionado: color neutro */
   background: var(--bg3);
   color: var(--text2);
   border: 1.5px solid var(--border);
 }
-.login-btn svg { width: 18px; height: 18px; }
-/* Con perfil seleccionado: color de acento */
+.login-btn svg { 
+  width: 18px; 
+  height: 18px; 
+}
 body.cliente .login-btn,
 body.veterinario .login-btn {
   background: var(--accent);
@@ -144,9 +157,11 @@ body.veterinario .login-btn {
   font-size: 13px;
   color: var(--text2);
 }
-.login-theme svg { width: 16px; height: 16px; }
+.login-theme svg { 
+  width: 16px; 
+  height: 16px; 
+}
 
-/* Link de "Registrarse" — neutro sin perfil, accent con perfil */
 .login-footer a {
   color: var(--text2);
   font-weight: 600;

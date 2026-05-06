@@ -1,8 +1,47 @@
-/* ============ CLIENTE — CHAT ============ */
+.chat-avatar {
+  width: 40px;
+  height: 40px;
+  font-size: 16px;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.chat-item-avatar {
+  width: 38px;
+  height: 38px;
+  font-size: 15px;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.chat-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.chat-item-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.msg.sent .msg-bubble {
+  background: var(--accent);
+  color: #fff;
+  border-radius: 14px 14px 3px 14px;
+}
+
+.msg.recv .msg-bubble {
+  background: var(--bg3);
+  border-radius: 14px 14px 14px 3px;
+}
+
 .chat-search-wrap {
   padding: 12px 14px;
   border-bottom: 1px solid var(--border);
 }
+
 .chat-layout {
   height: calc(100vh - var(--topbar-h) - 100px);
 }

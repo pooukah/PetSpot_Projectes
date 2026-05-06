@@ -1,7 +1,20 @@
-// al principio no hay perfil seleccionado
-var perfilSeleccionado = null;
+////////////////////////////////////////////////////////// DOM
+const optCliente = document.getElementById('opt-cliente');
+const optVet = document.getElementById('opt-vet');
+const btnLogin = document.getElementById('btn-login');
+const inputPass = document.getElementById('pass');
+const loginThemeToggle = document.getElementById('login-theme-toggle');
+const logoIcon = document.getElementById('logo-icon');
+const iconCliente = document.getElementById('icon-cliente');
+const iconVet = document.getElementById('icon-vet');
+const loginThemeIcon = document.getElementById('login-theme-icon');
 
-function seleccionarPerfil(tipo) {
+////////////////////////////////////////////////////////// VARIABLES
+// al principio no hay perfil seleccionado
+let perfilSeleccionado = null;
+
+////////////////////////////////////////////////////////// FUNCIONES
+const seleccionarPerfil = function(tipo){
   perfilSeleccionado = tipo;
 
   // aplicar los colores segun el tipo de perfil seleccionado
@@ -9,22 +22,31 @@ function seleccionarPerfil(tipo) {
   document.body.classList.add(tipo);
 
   // Marcar el botón activo
-  document.getElementById('opt-cliente').classList.toggle('active', tipo === 'cliente');
-  document.getElementById('opt-vet').classList.toggle('active', tipo === 'veterinario');
+  optCliente.classList.toggle('active', tipo === 'cliente');
+  optVet.classList.toggle('active', tipo === 'veterinario');
+};
 
-}
+// USO INNERHTML EN VARIOS JS PARA LOS SVG, PERDONAME ORIOL
+const actualizarIconoTema = function(){
+  let oscuro = localStorage.getItem('ps_dark') !== 'false';
+  ponerIcono(loginThemeIcon, oscuro ? Icons.moon : Icons.sun);
+  loginThemeIcon.classList.toggle('on', !oscuro);
 
-async function iniciarSesion() {
-   console.log('iniciarSesion llamado, perfil:', perfilSeleccionado);
+  iconCliente.innerHTML = Icons.profileUser || Icons.user;
+  iconVet.innerHTML = Icons.profileVet || Icons.stethoscope;
+};
+
+const iniciarSesion = async function() {
+  console.log('perfil:', perfilSeleccionado);
   if (!perfilSeleccionado) {
     PetSpot.notify('Por favor, selecciona un perfil primero');
     return;
   }
 
-  var email = document.getElementById('email').value.trim();
-  var password = document.getElementById('pass').value;
+  let email = document.getElementById('email').value.trim();
+  let password = document.getElementById('pass').value;
   if (!email || !password) {
-    PetSpot.notify('Introduce tu correo electrónico');
+    PetSpot.notify('Introduce tu correo y contraseña');
     return;
   }
 
@@ -37,7 +59,7 @@ async function iniciarSesion() {
 
     if (!response.ok) {
       const err = await response.json();
-      console.error('Login fallido:', err);
+      console.error('error:', err);
       throw new Error(err.detail || "Error en el login");
     }
 
@@ -60,7 +82,7 @@ async function iniciarSesion() {
       : 'veterinario/htmls/inicio.html';
     window.location.href = destino;
     
-    PetSpot.notify('✅ Sesión iniciada correctamente');
+    PetSpot.notify('Sesión iniciada correctamente');
 
     // Redirigir según el rol
     // if (data.rol === 'cliente') {
@@ -70,36 +92,42 @@ async function iniciarSesion() {
     // }
 
   } catch (error) {
-    console.error('Error catch:', error);
-    PetSpot.notify('❌ ' + error.message);
+    console.error('Error:', error);
+    PetSpot.notify(error.message);
   }
-}
+};
 
-// ── Al cargar la página ──
-(function() {
-  // Aplicar tema guardado
-  var oscuro = localStorage.getItem('ps_dark') !== 'false';
+const init = function(){
+  // aplicar tema guardado
+  let oscuro = localStorage.getItem('ps_dark') !== 'false';
   document.body.classList.toggle('modoclaro', !oscuro);
 
-  // Poner iconos
-  ponerIcono(document.getElementById('logo-icon'), Icons.logoPaw);
-  ponerIcono(document.getElementById('icon-cliente'), Icons.user);
-  ponerIcono(document.getElementById('icon-vet'), Icons.stethoscope);
+  // poner iconos
+  ponerIcono(logoIcon, Icons.logoPaw);
+  iconCliente.innerHTML = Icons.user;
+  iconVet.innerHTML = Icons.stethoscope;
 
-  // Icono del toggle de tema
   actualizarIconoTema();
-
-  // Evento del toggle de tema
-  document.getElementById('login-theme-toggle').addEventListener('click', function() {
+  loginThemeToggle.addEventListener('click', function() {
     PetSpot.toggleTheme();
     actualizarIconoTema();
   });
-})();
+};
 
-function actualizarIconoTema() {
-  var oscuro = localStorage.getItem('ps_dark') !== 'false';
-  ponerIcono(document.getElementById('login-theme-icon'), oscuro ? Icons.moon : Icons.sun);
-  document.getElementById('login-theme-toggle').classList.toggle('on', !oscuro);
-  document.getElementById('icon-cliente').innerHTML = Icons.profileUser || Icons.user;
-  document.getElementById('icon-vet').innerHTML = Icons.profileVet || Icons.stethoscope;
-}
+////////////////////////////////////////////////////////// ADD EVENT LISTENERS
+optCliente.addEventListener('click', function() {
+  seleccionarPerfil('cliente');
+});
+optVet.addEventListener('click', function() {
+  seleccionarPerfil('veterinario');
+});
+btnLogin.addEventListener('click', function() {
+  iniciarSesion();
+});
+inputPass.addEventListener('keydown', function(event) {
+  if (event.key === 'Enter') {
+    iniciarSesion();
+  }
+});
+
+init();

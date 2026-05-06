@@ -1,5 +1,3 @@
-/* ============ VETERINARIO — INICIO ============ */
-
 .vet-inicio-grid {
   display: grid;
   grid-template-columns: 1fr 320px;
@@ -61,7 +59,10 @@
   color: var(--accent);
   font-weight: 600;
 }
-.ingr-change svg { width: 13px; height: 13px; }
+.ingr-change svg { 
+  width: 13px; 
+  height: 13px; 
+}
 
 .alert-item {
   border-radius: var(--radius-sm);
@@ -70,7 +71,10 @@
   margin-bottom: 8px;
 }
 .alert-item:last-child { margin-bottom: 0; }
-.alert-item-title { font-weight: 700; margin-bottom: 3px; }
+.alert-item-title { 
+  font-weight: 700; 
+  margin-bottom: 3px; 
+}
 .alert-item-sub { color: var(--text2); }
 
 .client-row {

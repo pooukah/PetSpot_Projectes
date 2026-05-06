@@ -1,17 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Syne:wght@600;700;800&display=swap');
 
-/* ============================================
-   PETSPOT — SHARED DESIGN SYSTEM
-   Tamaños escalados para mejor legibilidad
-   ============================================ */
-
 :root {
-  /* Colores cliente (por defecto) */
   --accent: #6dd3b1;
   --accent-dark: #4ab898;
   --accent-light: rgba(109,211,177,0.13);
 
-  /* Fondo oscuro */
   --bg:   #0f1117;
   --bg2:  #161b26;
   --bg3:  #1e2535;
@@ -20,11 +13,9 @@
   --text2:  #8a91a8;
   --text3:  #545e7a;
 
-  /* Layout */
   --sidebar-w: 240px;
   --topbar-h:  64px;
 
-  /* Escalado +20% respecto a la versión anterior */
   --font-base:  15px;
   --font-sm:    13px;
   --font-xs:    12px;
@@ -42,14 +33,12 @@
   --pad-xs: 10px;
 }
 
-/* ── Perfil veterinario ── */
 body.veterinario {
   --accent:       #53B8CA;
   --accent-dark:  #3a9db0;
   --accent-light: rgba(83,184,202,0.13);
 }
 
-/* ── Modo claro ── */
 body.modoclaro {
   --bg:    #eef1f7;
   --bg2:   #ffffff;
@@ -61,7 +50,6 @@ body.modoclaro {
   --shadow: 0 4px 28px rgba(0,0,0,0.09);
 }
 
-/* ============ RESET ============ */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
 body {
@@ -77,12 +65,10 @@ body {
 a { text-decoration: none; color: inherit; }
 button { font-family: inherit; cursor: pointer; }
 
-/* ============ SCROLLBAR ============ */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-/* ============ SIDEBAR ============ */
 .sidebar {
   width: var(--sidebar-w);
   background: var(--bg2);
@@ -175,7 +161,6 @@ button { font-family: inherit; cursor: pointer; }
   text-align: center;
 }
 
-/* Sidebar bottom: theme toggle + logout */
 .sidebar-bottom {
   padding: 12px 10px 14px;
   border-top: 1px solid var(--border);
@@ -184,7 +169,6 @@ button { font-family: inherit; cursor: pointer; }
   gap: 4px;
 }
 
-/* Theme toggle row */
 .theme-toggle-row {
   display: flex;
   align-items: center;
@@ -198,7 +182,6 @@ button { font-family: inherit; cursor: pointer; }
 .theme-toggle-row svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.7; }
 .theme-toggle-row span { flex: 1; }
 
-/* Toggle switch */
 .toggle-switch {
   width: 40px; height: 22px;
   background: var(--bg3);
@@ -241,7 +224,6 @@ button { font-family: inherit; cursor: pointer; }
 .btn-logout svg { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.7; }
 .btn-logout:hover { background: rgba(255,107,107,0.1); }
 
-/* ============ TOPBAR ============ */
 .topbar {
   position: fixed;
   top: 0; left: var(--sidebar-w); right: 0;
@@ -270,7 +252,6 @@ button { font-family: inherit; cursor: pointer; }
   border: 2px solid var(--accent-light);
 }
 
-/* ============ MAIN CONTENT ============ */
 .main {
   margin-left: var(--sidebar-w);
   margin-top: var(--topbar-h);
@@ -279,7 +260,6 @@ button { font-family: inherit; cursor: pointer; }
   min-height: calc(100vh - var(--topbar-h));
 }
 
-/* ============ PAGE HEADER ============ */
 .page-header {
   display: flex;
   align-items: flex-start;
@@ -299,7 +279,6 @@ button { font-family: inherit; cursor: pointer; }
   margin-top: 3px;
 }
 
-/* ============ CARDS ============ */
 .card {
   background: var(--bg2);
   border: 1px solid var(--border);
@@ -323,7 +302,6 @@ button { font-family: inherit; cursor: pointer; }
 }
 .card-title svg { width: 18px; height: 18px; }
 
-/* ============ BUTTONS ============ */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -353,7 +331,6 @@ button { font-family: inherit; cursor: pointer; }
 .btn-sm { padding: 6px 12px; font-size: var(--font-xs); }
 .btn-xs { padding: 4px 9px; font-size: 11px; }
 
-/* ============ BADGES ============ */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -368,7 +345,6 @@ button { font-family: inherit; cursor: pointer; }
 .badge-red    { background: rgba(255,80,80,0.13);   color: #ff6b6b; }
 .badge-gray   { background: var(--bg3); color: var(--text2); }
 
-/* ============ TABS ============ */
 .tabs {
   display: flex; gap: 4px;
   background: var(--bg3);
@@ -391,7 +367,6 @@ button { font-family: inherit; cursor: pointer; }
 }
 .tab.active { background: var(--bg2); color: var(--accent); font-weight: 600; }
 
-/* ============ FORM ============ */
 .form-group { margin-bottom: 14px; }
 .form-label {
   display: block;
@@ -419,7 +394,6 @@ button { font-family: inherit; cursor: pointer; }
 select.form-input { cursor: pointer; }
 textarea.form-input { resize: vertical; }
 
-/* ============ TABLE ============ */
 .table { width: 100%; border-collapse: collapse; }
 .table th {
   text-align: left;
@@ -441,12 +415,10 @@ textarea.form-input { resize: vertical; }
 .table tr:last-child td { border-bottom: none; }
 .table tbody tr:hover td { background: var(--bg3); }
 
-/* ============ GRID HELPERS ============ */
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
 .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
 
-/* ============ STAT CARDS ============ */
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 14px; margin-bottom: 22px; }
 .stat-card {
   background: var(--bg2);
@@ -465,7 +437,6 @@ textarea.form-input { resize: vertical; }
 }
 .stat-icon svg { width: 20px; height: 20px; stroke: var(--accent); }
 
-/* ============ CITA CARD ============ */
 .cita-card {
   background: var(--bg2);
   border: 1px solid var(--border);
@@ -488,7 +459,6 @@ textarea.form-input { resize: vertical; }
 .cita-sub svg { width: 13px; height: 13px; }
 .cita-actions { display: flex; gap: 7px; flex-shrink: 0; }
 
-/* ============ PET CARD ============ */
 .pet-card {
   background: var(--bg2);
   border: 1px solid var(--border);
@@ -511,7 +481,6 @@ textarea.form-input { resize: vertical; }
 .pet-name { font-size: var(--font-base); font-weight: 700; color: var(--text); }
 .pet-detail { font-size: var(--font-xs); color: var(--text2); margin-top: 2px; }
 
-/* ============ PRODUCT CARD ============ */
 .product-card {
   background: var(--bg2);
   border: 1px solid var(--border);
@@ -533,7 +502,6 @@ textarea.form-input { resize: vertical; }
 .product-price { font-size: 17px; font-weight: 800; color: var(--accent); }
 .product-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
 
-/* ============ CHAT ============ */
 .chat-layout {
   display: grid;
   grid-template-columns: 280px 1fr;
@@ -561,7 +529,6 @@ textarea.form-input { resize: vertical; }
 .chat-input-row input { flex: 1; background: var(--bg3); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; font-size: var(--font-sm); color: var(--text); font-family: 'DM Sans', sans-serif; outline: none; }
 .chat-input-row input:focus { border-color: var(--accent); }
 
-/* ============ MODAL ============ */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: flex; align-items: center; justify-content: center; z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
 .modal-overlay.open { opacity: 1; pointer-events: all; }
 .modal { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; width: 460px; max-width: 95vw; transform: translateY(20px); transition: transform 0.2s ease; }
@@ -569,13 +536,11 @@ textarea.form-input { resize: vertical; }
 .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
 .modal-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; }
 
-/* ============ SEARCH BAR ============ */
 .search-bar { display: flex; align-items: center; gap: 9px; background: var(--bg3); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 9px 13px; }
 .search-bar svg { width: 16px; height: 16px; color: var(--text3); flex-shrink: 0; }
 .search-bar input { background: none; border: none; color: var(--text); font-size: var(--font-sm); font-family: 'DM Sans', sans-serif; flex: 1; outline: none; }
 .search-bar input::placeholder { color: var(--text3); }
 
-/* ============ PACK CARD ============ */
 .pack-card { background: var(--bg2); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 22px; position: relative; transition: all var(--transition); }
 .pack-card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: var(--shadow); }
 .pack-card.popular { border-color: var(--accent); }
@@ -591,17 +556,14 @@ textarea.form-input { resize: vertical; }
 .pack-items li .check { color: var(--accent); flex-shrink: 0; }
 .pack-items li.disabled { opacity: 0.4; }
 
-/* ============ NOTIF TOAST ============ */
 .notif { position: fixed; bottom: 24px; right: 24px; background: var(--bg2); border: 1px solid var(--accent); border-radius: var(--radius); padding: 14px 18px; font-size: var(--font-sm); z-index: 300; transform: translateY(80px); opacity: 0; transition: all 0.3s ease; max-width: 300px; box-shadow: var(--shadow); }
 .notif.show { transform: translateY(0); opacity: 1; }
 
-/* ============ TOGGLE BOOL ============ */
 .toggle { width: 40px; height: 22px; background: var(--bg3); border-radius: 11px; position: relative; cursor: pointer; border: 1.5px solid var(--border); transition: background var(--transition); flex-shrink: 0; }
 .toggle.on { background: var(--accent); border-color: var(--accent); }
 .toggle::after { content: ''; position: absolute; width: 16px; height: 16px; background: #fff; border-radius: 50%; top: 1px; left: 1px; transition: transform var(--transition); box-shadow: 0 1px 4px rgba(0,0,0,0.25); }
 .toggle.on::after { transform: translateX(18px); }
 
-/* ============ MISC ============ */
 .divider { height: 1px; background: var(--border); margin: 16px 0; }
 .filter-chip { padding: 6px 14px; border-radius: 20px; font-size: var(--font-xs); font-weight: 600; border: 1.5px solid var(--border); cursor: pointer; transition: all var(--transition); background: var(--bg2); color: var(--text2); }
 .filter-chip.active { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
