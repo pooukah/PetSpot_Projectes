@@ -1,7 +1,7 @@
-from fastapi import FastAPI, HTTPException, Header
+from fastapi import FastAPI, HTTPException, Header, Query
 from fastapi.middleware.cors import CORSMiddleware
 from db import get_db_connection
-from models import Clinica, ClinicaRegistro, ClienteRegistro, VetRegistro, Login, NewProd
+from models import Clinica, ClinicaRegistro, ClienteRegistro, VetRegistro, Login, NewProd, UserResponse
 from typing import List
 
 app = FastAPI()
@@ -283,3 +283,70 @@ def delete_producto(id_producto: int, x_user_email: str = Header(...)):
     finally:
         cursor.close()
         conn.close()
+
+##################################################### 10. GET TODAS LAS CUENTAS DE CLIENTES
+@app.get("/cuentas/clientes", response_model=List[dict])
+def get_cuentas_clientes():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        cursor.execute("""
+            SELECT id_cliente, nombre, apellidos, email, telefono
+            FROM cliente
+            ORDER BY nombre ASC
+        """)
+        clientes = cursor.fetchall()
+        return clientes
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
+
+##################################################### 11. GET TODAS LAS CUENTAS DE VETERINARIOS
+@app.get("/cuentas/veterinarios", response_model=List[dict])
+def get_cuentas_veterinarios():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        cursor.execute("""
+            SELECT v.id_veterinario, v.nombre, v.apellidos, v.email, v.telefono, c.nombre as clinica
+            FROM veterinario v
+            JOIN clinica c ON v.id_clinica = c.id_clinica
+            ORDER BY v.nombre ASC
+        """)
+        veterinarios = cursor.fetchall()
+        return veterinarios
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
+
+##################################################### 12. BUSCAR CLIENTES POR EMAIL
+@app.get("/api/usuarios/buscar-clientes", response_model=List[UserResponse])
+def buscar_clientes(query: str = Query(..., min_length=1)):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        cursor.execute("""
+            SELECT id_cliente as id, nombre, email, telefono
+            FROM cliente
+            WHERE email LIKE %s OR nombre LIKE %s
+            ORDER BY nombre ASC
+            LIMIT 10
+        """, (f"%{query}%", f"%{query}%"))
+        
+        clientes = cursor.fetchall()
+        return clientes
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
+
+

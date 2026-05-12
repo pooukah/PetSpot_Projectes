@@ -58,4 +58,11 @@ class NewProd(BaseModel):
     precio: float
     stock: int
 
+########################################### BÚSQUEDA
+# PARA BUSCAR CLIENTES
+class UserResponse(BaseModel):
+    id: int
+    nombre: str
+    email: str
+    telefono: Optional[str] = None
     
