@@ -15,7 +15,7 @@ import mysql.connector
 import os
 
 db_config = {
-    'host': os.getenv('DB_HOST', 'mariadb'),  # ← usa variable de entorno
+    'host': os.getenv('DB_HOST', 'localhost'),  # ← localhost para desarrollo local
     'port': int(os.getenv('DB_PORT', 3306)),
     'user': os.getenv('DB_USER', 'petspot'),
     'password': os.getenv('DB_PASSWORD', 'PetSpot'),
