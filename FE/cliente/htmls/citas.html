@@ -17,21 +17,13 @@
 
   <div class="tabs">
     <button class="tab active" onclick="switchTab('proximas',this)">Próximas</button>
-    <button class="tab" onclick="switchTab('historial',this)">Historial</button>
     <button class="tab" onclick="switchTab('calendario',this)">Calendario</button>
   </div>
 
-  <!-- PRÓXIMAS -->
   <div id="tab-proximas">
     <div id="list-proximas"></div>
   </div>
 
-  <!-- HISTORIAL (divs, no tabla) -->
-  <div id="tab-historial" style="display:none">
-    <div id="list-historial"></div>
-  </div>
-
-  <!-- CALENDARIO -->
   <div id="tab-calendario" style="display:none">
     <div class="cal-grid-wrap">
       <div class="card">
@@ -55,7 +47,6 @@
   </div>
 </div>
 
-<!-- MODAL NUEVA CITA -->
 <div class="modal-overlay" id="modal-cita">
   <div class="modal">
     <div class="modal-header">
@@ -66,18 +57,12 @@
       <label class="form-label">Mascota</label>
       <select class="form-input" id="nueva-mascota">
         <option value="">— Selecciona —</option>
-        <option>Luna (Labrador)</option>
-        <option>Miso (Siamés)</option>
-        <option>Coco (Mini Rex)</option>
       </select>
     </div>
     <div class="form-group">
       <label class="form-label">Veterinario</label>
       <select class="form-input" id="nueva-vet">
         <option value="">— Selecciona —</option>
-        <option>Dra. García — Clínica VetPro</option>
-        <option>Dr. Martínez — VetSalut BCN</option>
-        <option>Dra. López — AnimaCare Vet</option>
       </select>
     </div>
     <div class="form-group">

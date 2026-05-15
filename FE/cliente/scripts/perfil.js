@@ -1,6 +1,8 @@
 PetSpot.init('cliente');
 buildClienteLayout('perfil');
 
+const btnCambiarPassword = document.getElementById('btn-cambiar-password');
+
 ponerIcono(document.getElementById('icon-edit-av'),  Icons.edit);
 ponerIcono(document.getElementById('icon-check-sm'), Icons.check);
 ponerIcono(document.getElementById('icon-plus-pet'), Icons.plus);
@@ -8,10 +10,70 @@ ponerIcono(document.getElementById('icon-x-pet'),    Icons.x);
 ponerIcono(document.getElementById('icon-paw-modal'), Icons.paw);
 
 let user = PetSpot.getUser();
+let listaMascotas = [];
+let petIcons = { dog: Icons.dog, cat: Icons.cat, rabbit: Icons.rabbit };
+
+
+const cargarPerfil = async function() {
+  if (!user || !user.email) return;
+  try {
+    const resp = await fetch(`http://127.0.0.1:8000/auth/perfil/cliente/${user.email}`);
+    const data = await resp.json();
+    
+    document.getElementById('input-nombre').value = data.nombre || '';
+    document.getElementById('input-apellidos').value = data.apellidos || '';
+    document.getElementById('input-tel').value = data.telefono || '';
+    document.getElementById('input-cp').value = data.codigo_postal || '';
+    document.getElementById('input-dir').value = data.direccion || '';
+
+    const nombreCompleto = (data.nombre + ' ' + (data.apellidos || '')).trim();
+    document.getElementById('profile-name').textContent = nombreCompleto || 'Sin nombre';
+    document.getElementById('profile-av').textContent = (data.nombre || '?').charAt(0).toUpperCase();
+
+    const select = document.getElementById('input-clinica');
+    if (select && data.nombre_clinica) select.value = data.nombre_clinica;
+  } catch (e) { console.error("Error perfil:", e); }
+};
+
+const cargarClinicas = async function() {
+  const API_URL = "http://127.0.0.1:8000/clinicas/registro";
+  try {
+    const resp = await fetch(API_URL);
+    const clinicas = await resp.json();
+    const select = document.getElementById('input-clinica');
+    if (!select) return;
+    clinicas.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.nombre;
+      opt.textContent = c.nombre;
+      select.appendChild(opt);
+    });
+    cargarPerfil();
+  } catch (e) { console.error("Error clinicas:", e); }
+};
+cargarClinicas();
+
+const cargarMascotas = async function() {
+  const email = localStorage.getItem('user_email');
+  if (!email) return;
+  
+  try {
+    const response = await fetch(`http://127.0.0.1:8000/api/mascotas/mis-mascotas`, {
+      headers: { "x-user-email": email }
+    });
+    
+    if (!response.ok) throw new Error('Error al cargar mascotas');
+    
+    listaMascotas = await response.json();
+    renderMascotas();
+  } catch (error) {
+    console.error('Error:', error);
+    listaMascotas = [];
+    renderMascotas();
+  }
+};
+
 if (user) {
-  document.getElementById('input-nombre').value = user.nombre  || '';
-  document.getElementById('input-email').value  = user.email   || '';
-  document.getElementById('input-dir').value    = user.direccion || '';
   document.getElementById('profile-name').textContent  = user.nombre || '';
   document.getElementById('profile-email').textContent = user.email  || '';
 }
@@ -20,29 +82,54 @@ document.getElementById('input-nombre').addEventListener('input', function() {
   document.getElementById('profile-name').textContent = this.value || 'Sin nombre';
 });
 
-const guardarDatos = function() {
+const guardarDatos = async function() {
   let nombre = document.getElementById('input-nombre').value.trim();
-  let email  = document.getElementById('input-email').value.trim();
-  let tel    = document.getElementById('input-tel').value.trim();
-  let dir    = document.getElementById('input-dir').value.trim();
-  let cp     = document.getElementById('input-cp').value.trim();
+  let apellidos = document.getElementById('input-apellidos').value.trim();
+  let tel = document.getElementById('input-tel').value.trim();
+  let dir = document.getElementById('input-dir').value.trim();
+  let cp = document.getElementById('input-cp').value.trim();
 
   if (!nombre) {
     PetSpot.notify('El nombre no puede estar vacío');
     return;
   }
 
-  let u = PetSpot.getUser();
-  u.nombre    = nombre;
-  u.email     = email;
-  u.direccion = dir;
-  PetSpot.setUser(u);
+  const email = localStorage.getItem('user_email');
+  
+  try{
+    const response = await fetch(`http://127.0.0.1:8000/auth/perfil/cliente/${email}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nombre: nombre,
+        apellidos: apellidos,
+        telefono: tel,
+        direccion: dir,
+        codigo_postal: cp
+      })
+    });
 
-  PetSpot.setTopbar();
-  document.getElementById('profile-name').textContent  = nombre;
-  document.getElementById('profile-email').textContent = email;
+    if(!response.ok) throw new Error('ERROR');
 
-  PetSpot.notify('Datos guardados correctamente');
+    let u = PetSpot.getUser();
+    u.nombre = nombre;
+    u.apellidos = apellidos;
+    u.telefono = tel;
+    u.direccion = dir;
+    u.cp = cp;
+    PetSpot.setUser(u);
+
+    PetSpot.setTopbar();
+    
+    const nombreCompleto = (nombre + ' ' + apellidos).trim();
+    document.getElementById('profile-name').textContent = nombreCompleto || 'Sin nombre';
+    document.getElementById('profile-av').textContent = (nombre || '?').charAt(0).toUpperCase();
+
+    PetSpot.notify('Datos guardados correctamente');
+    cargarPerfil();
+  }catch(error){
+    console.log(error);
+  }
 };
 
 const showSection = function(sec, el) {
@@ -53,9 +140,6 @@ const showSection = function(sec, el) {
   for (let i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
   el.classList.add('active');
 };
-
-let listaMascotas = Almacen.cargar('mascotas'); 
-let petIcons = { dog: Icons.dog, cat: Icons.cat, rabbit: Icons.rabbit };
 
 const obtenerType = function(especie) {
   if (especie === 'Perro') return 'dog';
@@ -92,9 +176,9 @@ const crearCardMascota = function(m) {
   let iconDiv = crearEl('div', { className: 'mascota-icon' });
   ponerIcono(iconDiv, petIcons[m.type] || Icons.paw);
 
-  let infoDiv  = document.createElement('div');
+  let infoDiv = document.createElement('div');
   infoDiv.style.flex = '1';
-  infoDiv.appendChild(crearEl('div', { className: 'mascota-name',  textContent: m.nombre }));
+  infoDiv.appendChild(crearEl('div', { className: 'mascota-name', textContent: m.nombre }));
   infoDiv.appendChild(crearEl('div', { className: 'mascota-breed', textContent: m.especie + ' · ' + m.raza }));
 
   let btnEliminar = crearEl('button', { className: 'btn btn-danger btn-sm', textContent: 'Eliminar' });
@@ -106,22 +190,58 @@ const crearCardMascota = function(m) {
 
   let grid = crearEl('div', { className: 'grid-2', style: { gap: '12px' } });
 
+  let nombreBloq = document.createElement('div');
+  nombreBloq.className = 'form-group';
+  let nombreLabel = crearEl('label', { className: 'form-label', textContent: 'Nombre' });
+  let nombreInput = crearEl('input', { className: 'form-input', type: 'text' });
+  nombreInput.value = m.nombre;
+  nombreInput.id = `nombre-${m.id}`;
+  nombreBloq.appendChild(nombreLabel);
+  nombreBloq.appendChild(nombreInput);
+
+  let especieBloq = document.createElement('div');
+  especieBloq.className = 'form-group';
+  let especieLabel = crearEl('label', { className: 'form-label', textContent: 'Especie' });
+  let especieSelect = crearEl('select', { className: 'form-input', id: `especie-${m.id}` });
+  let opciones = ['Perro', 'Gato', 'Conejo', 'Hámster', 'Otro'];
+  for (let opt of opciones) {
+    let option = document.createElement('option');
+    option.value = opt;
+    option.textContent = opt;
+    if (opt === m.especie) option.selected = true;
+    especieSelect.appendChild(option);
+  }
+  especieBloq.appendChild(especieLabel);
+  especieBloq.appendChild(especieSelect);
+
+  let razaBloq = document.createElement('div');
+  razaBloq.className = 'form-group';
+  let razaLabel = crearEl('label', { className: 'form-label', textContent: 'Raza' });
+  let razaInput = crearEl('input', { className: 'form-input', type: 'text' });
+  razaInput.value = m.raza;
+  razaInput.id = `raza-${m.id}`;
+  razaBloq.appendChild(razaLabel);
+  razaBloq.appendChild(razaInput);
+
   let pesoBloq = document.createElement('div');
   pesoBloq.className = 'form-group';
   let pesoLabel = crearEl('label', { className: 'form-label', textContent: 'Peso (kg)' });
   let pesoInput = crearEl('input', { className: 'form-input', type: 'text' });
   pesoInput.value = m.peso;
-  pesoInput.id    = 'peso-' + m.id;
+  pesoInput.id = `peso-${m.id}`;
   pesoBloq.appendChild(pesoLabel);
   pesoBloq.appendChild(pesoInput);
 
   let fechaBloq = document.createElement('div');
   fechaBloq.className = 'form-group';
   let fechaLabel = crearEl('label', { className: 'form-label', textContent: 'Fecha de nacimiento' });
-  let fechaInput = crearEl('input', { className: 'form-input', type: 'text' });
-  fechaInput.value    = m.nacimiento;
-  fechaInput.readOnly = true;
-  fechaInput.style.opacity = '0.7';
+  let fechaInput = crearEl('input', { className: 'form-input', type: 'date', id: `fecha-${m.id}` });
+  if (m.nacimiento) {
+    let partes = m.nacimiento.split('/');
+    if (partes.length === 3) {
+      fechaInput.value = `${partes[2]}-${partes[1]}-${partes[0]}`;
+    }
+  }
   fechaBloq.appendChild(fechaLabel);
   fechaBloq.appendChild(fechaInput);
 
@@ -130,19 +250,21 @@ const crearCardMascota = function(m) {
   chipBloq.style.gridColumn = '1 / -1';
   let chipLabel = crearEl('label', { className: 'form-label', textContent: 'Nº Microchip' });
   let chipInput = crearEl('input', { className: 'form-input', type: 'text' });
-  chipInput.value    = m.microchip;
-  chipInput.readOnly = true;
-  chipInput.style.opacity = '0.7';
+  chipInput.value = m.microchip || '';
+  chipInput.id = `microchip-${m.id}`;
   chipBloq.appendChild(chipLabel);
   chipBloq.appendChild(chipInput);
 
+  grid.appendChild(nombreBloq);
+  grid.appendChild(especieBloq);
+  grid.appendChild(razaBloq);
   grid.appendChild(pesoBloq);
   grid.appendChild(fechaBloq);
   grid.appendChild(chipBloq);
 
   let btnGuardar = crearEl('button', { className: 'btn btn-primary btn-sm', textContent: 'Guardar cambios' });
   btnGuardar.style.marginTop = '8px';
-  btnGuardar.addEventListener('click', crearHandlerGuardarPeso(m.id));
+  btnGuardar.addEventListener('click', crearHandlerGuardarMascota(m.id));
 
   card.appendChild(top);
   card.appendChild(grid);
@@ -157,59 +279,79 @@ const crearHandlerEliminar = function(id) {
   };
 };
 
-const crearHandlerGuardarPeso = function(id) {
-  return function() {
-    let input = document.getElementById('peso-' + id);
-    if (!input) return;
-    for (let i = 0; i < listaMascotas.length; i++) {
-      if (listaMascotas[i].id === id) {
-        listaMascotas[i].peso = input.value;
-        break;
+const crearHandlerGuardarMascota = function(id) {
+  return async function() {
+    let nombre = document.getElementById(`nombre-${id}`)?.value;
+    let especie = document.getElementById(`especie-${id}`)?.value;
+    let raza = document.getElementById(`raza-${id}`)?.value;
+    let peso = parseFloat(document.getElementById(`peso-${id}`)?.value);
+    let fechaInput = document.getElementById(`fecha-${id}`)?.value;
+    let microchip = document.getElementById(`microchip-${id}`)?.value;
+    
+    let fechaNacimiento = fechaInput || null;
+
+    const email = localStorage.getItem('user_email');
+    
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/api/mascotas/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "x-user-email": email
+        },
+        body: JSON.stringify({ 
+          nombre: nombre,
+          especie: especie,
+          raza: raza,
+          peso: peso,
+          fecha_nacimiento: fechaNacimiento,
+          microchip: microchip
+        })
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Error al actualizar');
       }
+      
+      PetSpot.notify('Datos actualizados correctamente');
+      cargarMascotas();
+    } catch (error) {
+      console.error('Error:', error);
+      PetSpot.notify('Error al actualizar: ' + error.message);
     }
-    Almacen.guardar('mascotas', listaMascotas);
-    PetSpot.notify('Peso actualizado');
   };
 };
 
-const eliminarMascota = function(id) {
-  let nombreMascota = '';
-  let nuevaLista = [];
-  for (let i = 0; i < listaMascotas.length; i++) {
-    if (listaMascotas[i].id === id) {
-      nombreMascota = listaMascotas[i].nombre;
-    } else {
-      nuevaLista.push(listaMascotas[i]);
-    }
-  }
-  listaMascotas = nuevaLista;
-  Almacen.guardar('mascotas', listaMascotas);
+const eliminarMascota = async function(id) {
+  const email = localStorage.getItem('user_email');
+  
+  try {
+    const response = await fetch(`http://127.0.0.1:8000/api/mascotas/${id}`, {
+      method: "DELETE",
+      headers: { "x-user-email": email }
+    });
 
-  if (nombreMascota) {
-    let citas = Almacen.cargar('citas');
-    let nuevasCitas = [];
-    for (let i = 0; i < citas.length; i++) {
-      if (citas[i].mascota !== nombreMascota) {
-        nuevasCitas.push(citas[i]);
-      }
-    }
-    Almacen.guardar('citas', nuevasCitas);
-  }
+    if (!response.ok) throw new Error('Error al eliminar');
 
-  renderMascotas();
-  PetSpot.notify('Mascota eliminada');
+    PetSpot.notify('Mascota eliminada');
+    cargarMascotas();
+  } catch (error) {
+    console.error('Error:', error);
+    PetSpot.notify('Error al eliminar la mascota');
+  }
 };
 
 document.getElementById('btn-add-pet').addEventListener('click', function() {
   document.getElementById('modal-pet').classList.add('open');
 });
 
-const addPet = function() {
-  let nombre    = document.getElementById('nueva-nombre').value.trim();
-  let especie   = document.getElementById('nueva-especie').value;
-  let raza      = document.getElementById('nueva-raza').value.trim();
-  let peso      = document.getElementById('nueva-peso').value.trim();
-  let fecha     = document.getElementById('nueva-fecha').value;
+const addPet = async function() {
+  let nombre = document.getElementById('nueva-nombre').value.trim();
+  let especie = document.getElementById('nueva-especie').value;
+  let raza = document.getElementById('nueva-raza').value.trim();
+  let peso = parseFloat(document.getElementById('nueva-peso').value);
+  let fecha = document.getElementById('nueva-fecha').value;
   let microchip = document.getElementById('nueva-microchip').value.trim();
 
   if (!nombre || !raza || !peso || !fecha) {
@@ -217,32 +359,41 @@ const addPet = function() {
     return;
   }
 
-  let partes       = fecha.split('-');
-  let fechaFormato = partes[2] + '/' + partes[1] + '/' + partes[0];
+  const email = localStorage.getItem('user_email');
+  
+  try {
+    const response = await fetch(`http://127.0.0.1:8000/api/mascotas/crear`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-user-email": email
+      },
+      body: JSON.stringify({
+        nombre: nombre,
+        especie: especie,
+        raza: raza,
+        peso: peso,
+        fecha_nacimiento: fecha,
+        microchip: microchip
+      })
+    });
 
-  let nueva = {
-    id:         Date.now(),
-    nombre:     nombre,
-    especie:    especie,
-    raza:       raza,
-    peso:       peso,
-    nacimiento: fechaFormato,
-    microchip:  microchip || 'Sin microchip',
-    type:       obtenerType(especie)
-  };
-  listaMascotas.push(nueva);
-  Almacen.guardar('mascotas', listaMascotas);
+    if (!response.ok) throw new Error('Error al crear mascota');
 
-  renderMascotas();
-  closeModal();
+    PetSpot.notify('Mascota añadida correctamente');
+    closeModal();
+    cargarMascotas();
 
-  document.getElementById('nueva-nombre').value    = '';
-  document.getElementById('nueva-raza').value      = '';
-  document.getElementById('nueva-peso').value      = '';
-  document.getElementById('nueva-fecha').value     = '';
-  document.getElementById('nueva-microchip').value = '';
+    document.getElementById('nueva-nombre').value = '';
+    document.getElementById('nueva-raza').value = '';
+    document.getElementById('nueva-peso').value = '';
+    document.getElementById('nueva-fecha').value = '';
+    document.getElementById('nueva-microchip').value = '';
 
-  PetSpot.notify(nombre + ' añadido/a correctamente');
+  } catch (error) {
+    console.error('Error:', error);
+    PetSpot.notify('Error al añadir la mascota');
+  }
 };
 
 const closeModal = function() {
@@ -269,4 +420,60 @@ for (let i = 0; i < notifCfg.length; i++) {
   notifLista.appendChild(row);
 }
 
-renderMascotas();
+const cambiarPassword = async function() {
+  let passActual = document.getElementById('pass-actual')?.value;
+  let passNueva = document.getElementById('pass-nueva')?.value;
+  let passConfirmar = document.getElementById('pass-confirmar')?.value;
+
+  if (!passActual || !passNueva || !passConfirmar) {
+    PetSpot.notify('Rellena todos los campos de contraseña');
+    return;
+  }
+
+  if (passNueva !== passConfirmar) {
+    PetSpot.notify('Las contraseñas nuevas no coinciden');
+    return;
+  }
+
+  if (passNueva.length < 6) {
+    PetSpot.notify('La nueva contraseña debe tener al menos 6 caracteres');
+    return;
+  }
+
+  const email = localStorage.getItem('user_email');
+  
+  try {
+    const response = await fetch(`http://127.0.0.1:8000/auth/cambiar-password/${email}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "x-user-email": email
+      },
+      body: JSON.stringify({
+        password_actual: passActual,
+        password_nueva: passNueva
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Error al cambiar contraseña');
+    }
+
+    PetSpot.notify('Contraseña actualizada correctamente');
+    
+    document.getElementById('pass-actual').value = '';
+    document.getElementById('pass-nueva').value = '';
+    document.getElementById('pass-confirmar').value = '';
+    
+  } catch (error) {
+    console.error('Error:', error);
+    PetSpot.notify(error.message);
+  }
+};
+
+if (btnCambiarPassword) {
+  btnCambiarPassword.addEventListener('click', cambiarPassword);
+}
+
+cargarMascotas();

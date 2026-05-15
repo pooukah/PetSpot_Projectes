@@ -7,13 +7,99 @@ ponerIcono(document.getElementById('icon-cal2'),      Icons.calendar);
 
 let listaCitas = Almacen.cargar('citas');
 
-document.getElementById('btn-nueva').addEventListener('click', function() {
-  document.getElementById('modal-cita').classList.add('open');
-});
+const cargarMascotasCliente = async function() {
+  const email = localStorage.getItem('user_email');
+  console.log(email);
+  if (!email) return;
+  
+  try {
+    const response = await fetch(`http://127.0.0.1:8000/api/mascotas/mis-mascotas`, {
+      headers: { "x-user-email": email }
+    });
+    
+    if (!response.ok) throw new Error('Error al cargar mascotas');
+    
+    const mascotas = await response.json();
+    console.log(mascotas);
+    const select = document.getElementById('nueva-mascota');
+    
+    if (select) {
+      while (select.options.length > 0) {
+        select.remove(0);
+      }
+
+      const defaultOption = document.createElement('option');
+      defaultOption.value = '';
+      defaultOption.textContent = '— Selecciona —';
+      select.appendChild(defaultOption);
+      
+      for (let i = 0; i < mascotas.length; i++) {
+        const option = document.createElement('option');
+        option.value = mascotas[i].id;
+        option.textContent = mascotas[i].nombre + ' (' + mascotas[i].especie + ')';
+        select.appendChild(option);
+      }
+    }
+  } catch (error) {
+    console.error('Error:', error);
+  }
+};
+
+const cargarVeterinariosCliente = async function() {
+  const email = localStorage.getItem('user_email');
+
+  if (!email) return;
+
+  try {
+    const response = await fetch('http://127.0.0.1:8000/api/veterinarios/mis-veterinarios', {
+      headers: { "x-user-email": email }
+    });
+
+    if (!response.ok) {
+      throw new Error('Error al cargar veterinarios');
+    }
+
+    const veterinarios = await response.json();
+
+    console.log(veterinarios);
+
+    const select = document.getElementById('nueva-vet');
+
+    if (select) {
+
+      while (select.options.length > 0) {
+        select.remove(0);
+      }
+
+      const defaultOption = document.createElement('option');
+      defaultOption.value = '';
+      defaultOption.textContent = '— Selecciona —';
+      select.appendChild(defaultOption);
+
+      for (let i = 0; i < veterinarios.length; i++) {
+
+        const vet = veterinarios[i];
+
+        const option = document.createElement('option');
+
+        option.value = vet.id;
+
+        option.textContent =
+          vet.nombre + ' ' +
+          vet.apellidos + ' — ' +
+          vet.clinica;
+
+        select.appendChild(option);
+      }
+    }
+
+  } catch (error) {
+    console.error('Error:', error);
+  }
+};
 
 const switchTab = function(tab, el) {
   document.getElementById('tab-proximas').style.display   = 'none';
-  document.getElementById('tab-historial').style.display  = 'none';
   document.getElementById('tab-calendario').style.display = 'none';
   document.getElementById('tab-' + tab).style.display = '';
   let botones = document.querySelectorAll('.tab');
@@ -30,7 +116,7 @@ const switchTab = function(tab, el) {
 
   let proximas = [];
   for (let i = 0; i < listaCitas.length; i++) {
-    if (listaCitas[i].estado !== 'completada' && listaCitas[i].estado !== 'cancelada') {
+    if (listaCitas[i].estado !== 'cancelada') {
       proximas.push(listaCitas[i]);
     }
   }
@@ -88,70 +174,51 @@ const crearCardProxima = function(c) {
   return card;
 };
 
-const cancelarCita = function(id, cardEl) {
-  cardEl.style.transition = 'opacity 0.3s, transform 0.3s';
-  cardEl.style.opacity = '0';
-  cardEl.style.transform = 'translateX(20px)';
+const cancelarCita = async function(id, cardEl) {
 
-  setTimeout(function() {
-    if (cardEl.parentNode) cardEl.parentNode.removeChild(cardEl);
-  }, 300);
+  try {
 
-  for (let i = 0; i < listaCitas.length; i++) {
-    if (listaCitas[i].id === id) {
-      listaCitas[i].estado = 'cancelada';
-      break;
+    const email = localStorage.getItem('user_email');
+
+    const response = await fetch(
+      `http://127.0.0.1:8000/api/citas/${id}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'x-user-email': email
+        }
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.detail || 'Error al eliminar cita');
     }
-  }
-  Almacen.guardar('citas', listaCitas);
-  PetSpot.notify('Cita cancelada');
-};
 
-const renderHistorial = function() {
-  let lista = document.getElementById('list-historial');
-  while (lista.firstChild) lista.removeChild(lista.firstChild);
+    cardEl.style.transition = 'opacity 0.3s, transform 0.3s';
+    cardEl.style.opacity = '0';
+    cardEl.style.transform = 'translateX(20px)';
 
-  let completadas = [];
-  for (let i = 0; i < listaCitas.length; i++) {
-    if (listaCitas[i].estado === 'completada') {
-      completadas.push(listaCitas[i]);
-    }
-  }
+    setTimeout(function() {
+      if (cardEl.parentNode) {
+        cardEl.parentNode.removeChild(cardEl);
+      }
+    }, 300);
 
-  if (completadas.length === 0) {
-    lista.appendChild(crearEl('p', {
-      textContent: 'No hay citas en el historial aún',
-      style: { textAlign: 'center', color: 'var(--text3)', padding: '24px', fontSize: '13px' }
-    }));
-    return;
-  }
+    listaCitas = listaCitas.filter(c => c.id !== id);
 
-  for (let i = 0; i < completadas.length; i++) {
-    let c = completadas[i];
-    let card = crearEl('div', { className: 'cita-card' });
+    Almacen.guardar('citas', listaCitas);
 
-    let timeDiv = crearEl('div', { className: 'cita-time' });
-    timeDiv.appendChild(crearEl('div', { className: 'hour', textContent: c.hora }));
-    timeDiv.appendChild(crearEl('div', { className: 'date', textContent: c.fecha }));
+    PetSpot.notify('Cita cancelada');
 
-    let divider = crearEl('div', { className: 'cita-divider' });
+  } catch (error) {
 
-    let infoDiv = crearEl('div', { className: 'cita-info' });
-    infoDiv.appendChild(crearEl('div', { className: 'cita-title', textContent: c.motivo }));
-    let sub = crearEl('div', { className: 'cita-sub', textContent: c.mascota + ' · ' + c.veterinario + ' · ' + (c.clinica || '') });
-    infoDiv.appendChild(sub);
+    console.error(error);
 
-    let badge = crearEl('span', { className: 'badge badge-blue', textContent: 'completada' });
-
-    card.appendChild(timeDiv);
-    card.appendChild(divider);
-    card.appendChild(infoDiv);
-    card.appendChild(badge);
-    lista.appendChild(card);
+    PetSpot.notify('Error al cancelar la cita');
   }
 };
-
-renderHistorial();
 
 let mesActual  = new Date().getMonth();
 let anioActual = new Date().getFullYear();
@@ -286,42 +353,89 @@ const closeModal = function() {
   }
 };
 
-const solicitarCita = function() {
-  let mascota     = document.getElementById('nueva-mascota').value;
-  let vetSelect   = document.getElementById('nueva-vet').value;
-  let motivo      = document.getElementById('nueva-motivo').value.trim();
-  let fechaInput  = document.getElementById('nueva-fecha').value;
-  let horaInput   = document.getElementById('nueva-hora').value;
+const solicitarCita = async function() {
 
-  if (!mascota || !motivo || !fechaInput || !horaInput) {
+  let mascota = document.getElementById('nueva-mascota').value;
+
+  let vetSelectEl = document.getElementById('nueva-vet');
+  let vetId = vetSelectEl.value;
+  let vetTexto = vetSelectEl.options[vetSelectEl.selectedIndex].text;
+
+  let motivo = document.getElementById('nueva-motivo').value.trim();
+  let fechaInput = document.getElementById('nueva-fecha').value;
+  let horaInput = document.getElementById('nueva-hora').value;
+
+  if (!mascota || !motivo || !fechaInput || !horaInput || !vetId) {
     PetSpot.notify('Por favor, rellena todos los campos');
     return;
   }
 
-  let partes = fechaInput.split('-');
-  let fechaLegible = partes[2] + '/' + partes[1];
+  try {
 
-  let nueva = {
-    id:         Date.now(),
-    hora:       horaInput,
-    fecha:      fechaLegible,
-    fechaISO:   fechaInput, 
-    veterinario: vetSelect.split(' — ')[0],
-    mascota:    mascota.split(' (')[0],
-    motivo:     motivo,
-    estado:     'pendiente',
-    clinica:    vetSelect.split(' — ')[1] || 'PetSpot'
-  };
+    const email = localStorage.getItem('user_email');
 
-  listaCitas.push(nueva);
-  Almacen.guardar('citas', listaCitas);
+    const response = await fetch('http://127.0.0.1:8000/api/citas/crear', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-user-email': email
+      },
+      body: JSON.stringify({
+        id_veterinario: parseInt(vetId),
+        id_mascota: parseInt(mascota),
+        fecha: fechaInput,
+        hora: horaInput,
+        motivo: motivo
+      })
+    });
 
-  closeModal();
-  renderProximas();
-  renderHistorial();
-  PetSpot.notify('Cita solicitada — estado: pendiente');
+    const data = await response.json();
 
-  document.getElementById('nueva-motivo').value = '';
-  document.getElementById('nueva-fecha').value  = '';
+    if (!response.ok) {
+      throw new Error(data.detail || 'Error al crear cita');
+    }
+
+    let partes = fechaInput.split('-');
+
+    let nueva = {
+      id: data.id_cita,
+      hora: horaInput,
+      fecha: partes[2] + '/' + partes[1],
+      fechaISO: fechaInput,
+      id_veterinario: vetId,
+      veterinario: vetTexto.split(' — ')[0],
+      mascota: document.getElementById('nueva-mascota')
+        .options[document.getElementById('nueva-mascota').selectedIndex]
+        .text.split(' (')[0],
+      motivo: motivo,
+      estado: 'pendiente',
+      clinica: vetTexto.split(' — ')[1] || 'PetSpot'
+    };
+
+    listaCitas.push(nueva);
+
+    Almacen.guardar('citas', listaCitas);
+
+    closeModal();
+
+    renderProximas();
+
+    PetSpot.notify('Cita creada correctamente');
+
+    document.getElementById('nueva-motivo').value = '';
+    document.getElementById('nueva-fecha').value = '';
+
+  } catch (error) {
+
+    console.error(error);
+
+    PetSpot.notify('Error al crear la cita');
+  }
 };
+
+document.getElementById('btn-nueva').addEventListener('click', async function() {
+  await cargarMascotasCliente();
+  await cargarVeterinariosCliente();
+  document.getElementById('modal-cita').classList.add('open');
+});
 renderProximas();

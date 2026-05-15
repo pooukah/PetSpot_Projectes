@@ -17,11 +17,9 @@ let perfilSeleccionado = null;
 const seleccionarPerfil = function(tipo){
   perfilSeleccionado = tipo;
 
-  // aplicar los colores segun el tipo de perfil seleccionado
   document.body.classList.remove('cliente', 'veterinario');
   document.body.classList.add(tipo);
 
-  // Marcar el botón activo
   optCliente.classList.toggle('active', tipo === 'cliente');
   optVet.classList.toggle('active', tipo === 'veterinario');
 };
@@ -51,7 +49,7 @@ const iniciarSesion = async function() {
   }
 
   try {
-    const response = await fetch("https://localhost:443/auth/login", {
+    const response = await fetch("http://127.0.0.1:8000/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password, rol: perfilSeleccionado })
@@ -76,7 +74,6 @@ const iniciarSesion = async function() {
     localStorage.setItem('user_email', data.email);
     localStorage.setItem('user_rol', data.rol);
 
-    // Redirección con log
     const destino = data.rol === 'cliente' 
       ? 'cliente/htmls/inicio.html' 
       : 'veterinario/htmls/inicio.html';

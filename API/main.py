@@ -9,7 +9,7 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  
-    allow_credentials=False,
+    allow_credentials=True,
     allow_methods=["*"],  
     allow_headers=["*"],  
 )
@@ -349,69 +349,57 @@ def buscar_clientes(query: str = Query(..., min_length=1)):
         cursor.close()
         conn.close()
 
-##################################################### 13. VETERINARIOS POR CLÍNICA (para cliente con firebase_uid)
-@app.get("/api/usuarios/buscar-veterinarios-clinica/{firebase_uid}", response_model=List[UserResponse])
-def buscar_veterinarios_por_cliente_uid(firebase_uid: str):
-    """Obtiene los veterinarios de la clínica asignada del cliente"""
+##################################################### 14. OBTENER MASCOTAS DEL CLIENTE
+@app.get("/api/mascotas/mis-mascotas")
+def get_mis_mascotas(x_user_email: str = Header(...)):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     
     try:
-        # 1. Buscamos la clínica del cliente por su firebase_uid
-        cursor.execute("SELECT id_clinica FROM cliente WHERE firebase_uid = %s", (firebase_uid,))
+        cursor.execute("SELECT id_cliente FROM cliente WHERE email = %s", (x_user_email,))
         cliente = cursor.fetchone()
         
-        if not cliente or not cliente['id_clinica']:
-            return []  # El cliente no tiene clínica asignada
-
-        id_clinica = cliente['id_clinica']
-
-        # 2. Buscamos los veterinarios de esa clínica
+        if not cliente:
+            return [] 
+        
+        id_cliente = cliente['id_cliente']
+        
         cursor.execute("""
-            SELECT id_veterinario as id, nombre, email, True as es_veterinario
-            FROM veterinario
-            WHERE id_clinica = %s
+            SELECT id_mascota, nombre, especie, raza, peso, fecha_nacimiento, microchip
+            FROM mascota
+            WHERE id_cliente = %s
             ORDER BY nombre ASC
-        """, (id_clinica,))
+        """, (id_cliente,))
         
-        veterinarios = cursor.fetchall()
-        
-        # Formatear respuesta para que coincida con UserResponse
+        mascotas = cursor.fetchall()
+
+        if len(mascotas) == 0:
+            return []
+
         resultado = []
-        for vet in veterinarios:
+        for m in mascotas:
+            especie = m['especie']
+            if especie == 'Perro':
+                icon_type = 'dog'
+            elif especie == 'Gato':
+                icon_type = 'cat'
+            elif especie == 'Conejo':
+                icon_type = 'rabbit'
+            else:
+                icon_type = 'rabbit' 
+            
             resultado.append({
-                "id": str(vet['id']),
-                "nombre": vet['nombre'],
-                "email": vet['email'],
-                "es_veterinario": True
+                "id": m['id_mascota'],
+                "nombre": m['nombre'],
+                "especie": especie,
+                "raza": m['raza'],
+                "peso": m['peso'],
+                "nacimiento": m['fecha_nacimiento'].strftime('%d/%m/%Y') if m['fecha_nacimiento'] else '',
+                "microchip": m['microchip'] or '',
+                "type": icon_type
             })
         
         return resultado
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        cursor.close()
-        conn.close()
-
-##################################################### 14. OBTENER MASCOTAS DEL CLIENTE
-@app.get("/api/mascotas/cliente/{firebase_uid}", response_model=List[Mascota])
-def get_mascotas_cliente(firebase_uid: str):
-    """Obtiene todas las mascotas registradas de un cliente"""
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    
-    try:
-        cursor.execute("""
-            SELECT id_mascota, nombre, especie, raza, peso, fecha_nacimiento
-            FROM mascota
-            WHERE firebase_uid = %s
-            ORDER BY nombre ASC
-        """, (firebase_uid,))
-        
-        mascotas = cursor.fetchall()
-        return mascotas
-    
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
@@ -420,38 +408,40 @@ def get_mascotas_cliente(firebase_uid: str):
 
 ##################################################### 15. CREAR MASCOTA
 @app.post("/api/mascotas/crear", status_code=201, response_model=dict)
-def crear_mascota(mascota: MascotaCreate):
-    """Crea una nueva mascota para un cliente"""
+def crear_mascota(mascota: dict, x_user_email: str = Header(...)):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     
     try:
-        # Validar que el cliente existe
-        cursor.execute("SELECT firebase_uid FROM cliente WHERE firebase_uid = %s", 
-                      (mascota.firebase_uid,))
-        if not cursor.fetchone():
+        cursor.execute("SELECT id_cliente FROM cliente WHERE email = %s", (x_user_email,))
+        cliente = cursor.fetchone()
+        
+        if not cliente:
             raise HTTPException(status_code=404, detail="Cliente no encontrado")
+        
+        id_cliente = cliente['id_cliente']
         
         cursor.execute("""
             INSERT INTO mascota 
-            (firebase_uid, nombre, especie, raza, peso, fecha_nacimiento)
-            VALUES (%s, %s, %s, %s, %s, %s)
+            (id_cliente, nombre, especie, raza, peso, fecha_nacimiento, microchip)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, (
-            mascota.firebase_uid,
-            mascota.nombre,
-            mascota.especie,
-            mascota.raza,
-            mascota.peso,
-            mascota.fecha_nacimiento
+            id_cliente,
+            mascota.get('nombre'),
+            mascota.get('especie'),
+            mascota.get('raza'),
+            mascota.get('peso'),
+            mascota.get('fecha_nacimiento'),
+            mascota.get('microchip')
         ))
         
         conn.commit()
         
         return {
             "id_mascota": cursor.lastrowid,
-            "nombre": mascota.nombre,
-            "especie": mascota.especie,
-            "raza": mascota.raza,
+            "nombre": mascota.get('nombre'),
+            "especie": mascota.get('especie'),
+            "raza": mascota.get('raza'),
             "message": "Mascota creada correctamente"
         }
     
@@ -464,66 +454,129 @@ def crear_mascota(mascota: MascotaCreate):
         cursor.close()
         conn.close()
 
-##################################################### 16. CREAR CITA
-@app.post("/api/citas/crear", status_code=201, response_model=dict)
-def crear_cita(cita: Cita):
-    """Crea una nueva cita veterinaria"""
+##################################################### BORRAR MASCOTA
+@app.delete("/api/mascotas/{id_mascota}")
+def eliminar_mascota(id_mascota: int, x_user_email: str = Header(...)):
     conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    
+    cursor = conn.cursor()
     try:
-        # Validar que el cliente existe
-        cursor.execute("SELECT firebase_uid FROM cliente WHERE firebase_uid = %s", 
-                      (cita.firebase_uid_cliente,))
-        if not cursor.fetchone():
-            raise HTTPException(status_code=404, detail="Cliente no encontrado")
+        cursor.execute("""
+            DELETE m FROM mascota m
+            JOIN cliente c ON m.id_cliente = c.id_cliente
+            WHERE m.id_mascota = %s AND c.email = %s
+        """, (id_mascota, x_user_email))
+        conn.commit()
         
-        # Validar que el veterinario existe
-        cursor.execute("SELECT id_veterinario FROM veterinario WHERE id_veterinario = %s", 
-                      (cita.id_veterinario,))
-        if not cursor.fetchone():
-            raise HTTPException(status_code=404, detail="Veterinario no encontrado")
-        
-        # Validar que la mascota existe
-        cursor.execute("SELECT id_mascota FROM mascota WHERE id_mascota = %s", 
-                      (cita.id_mascota,))
-        if not cursor.fetchone():
+        if cursor.rowcount == 0:
             raise HTTPException(status_code=404, detail="Mascota no encontrada")
         
-        # Crear la cita
+        return {"message": "Mascota eliminada correctamente"}
+    finally:
+        cursor.close()
+        conn.close()
+
+##################################################### ACTUALIZAR MASCOTA (completo)
+@app.put("/api/mascotas/{id_mascota}")
+def actualizar_mascota(id_mascota: int, datos: dict, x_user_email: str = Header(...)):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
         cursor.execute("""
-            INSERT INTO cita 
-            (firebase_uid_cliente, id_veterinario, id_mascota, fecha, hora, motivo, estado)
-            VALUES (%s, %s, %s, %s, %s, %s, 'pendiente')
+            UPDATE mascota m
+            JOIN cliente c ON m.id_cliente = c.id_cliente
+            SET m.nombre = %s, m.especie = %s, m.raza = %s, m.peso = %s, 
+                m.fecha_nacimiento = %s, m.microchip = %s
+            WHERE m.id_mascota = %s AND c.email = %s
         """, (
-            cita.firebase_uid_cliente,
-            cita.id_veterinario,
-            cita.id_mascota,
-            cita.fecha,
-            cita.hora,
-            cita.motivo
+            datos.get('nombre'),
+            datos.get('especie'),
+            datos.get('raza'),
+            datos.get('peso'),
+            datos.get('fecha_nacimiento'),
+            datos.get('microchip'),
+            id_mascota,
+            x_user_email
         ))
         
         conn.commit()
-        id_cita = cursor.lastrowid
         
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Mascota no encontrada")
+        
+        return {"message": "Mascota actualizada correctamente"}
+    finally:
+        cursor.close()
+        conn.close()
+
+##################################################### 16. CREAR CITA
+@app.post("/api/citas/crear", status_code=201)
+def crear_cita(cita: dict, x_user_email: str = Header(...)):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        cursor.execute("""
+            SELECT id_cliente
+            FROM cliente
+            WHERE email = %s
+        """, (x_user_email,))
+
+        cliente = cursor.fetchone()
+
+        if not cliente:
+            raise HTTPException(status_code=404, detail="Cliente no encontrado")
+
+        id_cliente = cliente['id_cliente']
+
+        cursor.execute("""
+            SELECT id_veterinario
+            FROM veterinario
+            WHERE id_veterinario = %s
+        """, (cita.get('id_veterinario'),))
+
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Veterinario no encontrado")
+
+        cursor.execute("""
+            SELECT id_mascota
+            FROM mascota
+            WHERE id_mascota = %s
+              AND id_cliente = %s
+        """, (
+            cita.get('id_mascota'),
+            id_cliente
+        ))
+
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Mascota no encontrada")
+
+        cursor.execute("""
+            INSERT INTO cita
+            (id_cliente, id_veterinario, id_mascota, fecha, hora, motivo, estado)
+            VALUES (%s, %s, %s, %s, %s, %s, 'pendiente')
+        """, (
+            id_cliente,
+            cita.get('id_veterinario'),
+            cita.get('id_mascota'),
+            cita.get('fecha'),
+            cita.get('hora'),
+            cita.get('motivo')
+        ))
+
+        conn.commit()
+
         return {
-            "id_cita": id_cita,
-            "firebase_uid_cliente": cita.firebase_uid_cliente,
-            "id_veterinario": cita.id_veterinario,
-            "id_mascota": cita.id_mascota,
-            "fecha": cita.fecha,
-            "hora": cita.hora,
-            "motivo": cita.motivo,
-            "estado": "pendiente",
-            "message": "Cita creada correctamente"
+            "message": "Cita creada correctamente",
+            "id_cita": cursor.lastrowid
         }
-    
+
     except HTTPException:
         raise
+
     except Exception as e:
         conn.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+
     finally:
         cursor.close()
         conn.close()
@@ -531,7 +584,6 @@ def crear_cita(cita: Cita):
 ##################################################### 17. OBTENER CITAS DEL CLIENTE
 @app.get("/api/citas/cliente/{firebase_uid}", response_model=List[CitaResponse])
 def get_citas_cliente(firebase_uid: str):
-    """Obtiene todas las citas de un cliente"""
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     
@@ -548,13 +600,12 @@ def get_citas_cliente(firebase_uid: str):
             JOIN mascota m ON c.id_mascota = m.id_mascota
             JOIN veterinario v ON c.id_veterinario = v.id_veterinario
             JOIN clinica cl ON v.id_clinica = cl.id_clinica
-            WHERE c.firebase_uid_cliente = %s
+            WHERE c.id_cliente = %s
             ORDER BY c.fecha DESC, c.hora DESC
-        """, (firebase_uid,))
+        """, (id_cliente,))
         
         citas = cursor.fetchall()
         
-        # Formatea respuesta
         resultado = []
         for cita in citas:
             resultado.append({
@@ -577,7 +628,6 @@ def get_citas_cliente(firebase_uid: str):
 ##################################################### 18. OBTENER CITAS DEL VETERINARIO
 @app.get("/api/citas/veterinario/{firebase_uid}", response_model=List[CitaResponse])
 def get_citas_veterinario(firebase_uid: str):
-    """Obtiene todas las citas de un veterinario"""
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     
@@ -593,11 +643,11 @@ def get_citas_veterinario(firebase_uid: str):
                 m.nombre as mascota_nombre
             FROM cita c
             JOIN mascota m ON c.id_mascota = m.id_mascota
-            JOIN cliente cl ON c.firebase_uid_cliente = cl.firebase_uid
+            JOIN cliente cl ON c.id_cliente = cl.id_cliente
             JOIN veterinario v ON c.id_veterinario = v.id_veterinario
             WHERE v.firebase_uid = %s
             ORDER BY c.fecha ASC, c.hora ASC
-        """, (firebase_uid,))
+        """, (id_cliente,))
         
         citas = cursor.fetchall()
         
@@ -620,10 +670,42 @@ def get_citas_veterinario(firebase_uid: str):
         cursor.close()
         conn.close()
 
+##################################################### BORRAR CITA
+@app.delete("/api/citas/{id_cita}")
+def eliminar_cita(id_cita: int, x_user_email: str = Header(...)):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        cursor.execute("""
+            DELETE c
+            FROM cita c
+            JOIN cliente cl ON c.id_cliente = cl.id_cliente
+            WHERE c.id_cita = %s
+              AND cl.email = %s
+        """, (id_cita, x_user_email))
+
+        conn.commit()
+
+        if cursor.rowcount == 0:
+            raise HTTPException(
+                status_code=404,
+                detail="Cita no encontrada"
+            )
+
+        return {"message": "Cita eliminada correctamente"}
+
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+    finally:
+        cursor.close()
+        conn.close()
+
 ##################################################### 19. ACTUALIZAR ESTADO DE CITA
 @app.put("/api/citas/{id_cita}/estado", response_model=dict)
 def actualizar_estado_cita(id_cita: int, datos: dict, x_user_email: str = Header(...)):
-    """Actualiza el estado de una cita (solo veterinario propietario)"""
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     
@@ -633,7 +715,6 @@ def actualizar_estado_cita(id_cita: int, datos: dict, x_user_email: str = Header
         if estado not in ['pendiente', 'confirmada', 'completada', 'cancelada']:
             raise HTTPException(status_code=400, detail="Estado inválido")
         
-        # Verificar que el veterinario es propietario de la cita
         cursor.execute("""
             SELECT c.id_cita
             FROM cita c
@@ -667,3 +748,146 @@ def actualizar_estado_cita(id_cita: int, datos: dict, x_user_email: str = Header
         cursor.close()
         conn.close()
 
+##################################################### 20. COGER INFO PARA PERFIL (cliente)
+@app.get("/auth/perfil/cliente/{email}")
+def get_perfil_cliente(email: str):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute("""
+            SELECT c.nombre, c.apellidos, c.email, c.telefono,
+                   c.direccion, c.codigo_postal,
+                   cl.nombre as nombre_clinica
+            FROM cliente c
+            LEFT JOIN clinica cl ON c.id_clinica = cl.id_clinica
+            WHERE c.email = %s
+        """, (email,))
+        data = cursor.fetchone()
+        if not data:
+            raise HTTPException(status_code=404, detail="Cliente no encontrado")
+        return data
+    finally:
+        cursor.close()
+        conn.close()
+
+##################################################### 21. ACTUALIZAR PERFIL (cliente)
+@app.put("/auth/perfil/cliente/{email}")
+def update_perfil_cliente(email: str, datos: dict):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            UPDATE cliente 
+            SET nombre = %s, apellidos = %s, telefono = %s, direccion = %s, codigo_postal = %s
+            WHERE email = %s
+        """, (
+            datos.get('nombre'),
+            datos.get('apellidos'),
+            datos.get('telefono'),
+            datos.get('direccion'),
+            datos.get('codigo_postal'),
+            email
+        ))
+        conn.commit()
+        
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Cliente no encontrado")
+            
+        return {"message": "Perfil actualizado correctamente"}
+    finally:
+        cursor.close()
+        conn.close()
+
+
+##################################################### 22. CAMBIAR CONTRASEÑA (cliente)
+@app.put("/auth/cambiar-password/{email}")
+def cambiar_password(email: str, datos: dict, x_user_email: str = Header(...)):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        password_actual = datos.get('password_actual')
+        password_nueva = datos.get('password_nueva')
+        
+        if email != x_user_email:
+            raise HTTPException(status_code=403, detail="No autorizado")
+        
+        cursor.execute("SELECT password FROM cliente WHERE email = %s", (email,))
+        user = cursor.fetchone()
+        
+        if not user:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        
+        if user['password'] != password_actual:
+            raise HTTPException(status_code=401, detail="Contraseña actual incorrecta")
+        
+        if len(password_nueva) < 6:
+            raise HTTPException(status_code=400, detail="La nueva contraseña debe tener al menos 6 caracteres")
+        
+        cursor.execute("UPDATE cliente SET password = %s WHERE email = %s", (password_nueva, email))
+        conn.commit()
+        
+        return {"message": "Contraseña actualizada correctamente"}
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
+
+##################################################### OBTENER VETERINARIOS DE LA CLÍNICA DEL CLIENTE
+@app.get("/api/veterinarios/mis-veterinarios")
+def get_mis_veterinarios(x_user_email: str = Header(...)):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        cursor.execute("""
+            SELECT id_clinica
+            FROM cliente
+            WHERE email = %s
+        """, (x_user_email,))
+
+        cliente = cursor.fetchone()
+
+        if not cliente or not cliente['id_clinica']:
+            return []
+
+        id_clinica = cliente['id_clinica']
+
+        cursor.execute("""
+            SELECT 
+                v.id_veterinario,
+                v.nombre,
+                v.apellidos,
+                c.nombre as clinica
+            FROM veterinario v
+            JOIN clinica c 
+                ON v.id_clinica = c.id_clinica
+            WHERE v.id_clinica = %s
+            ORDER BY v.nombre ASC
+        """, (id_clinica,))
+
+        veterinarios = cursor.fetchall()
+
+        resultado = []
+
+        for vet in veterinarios:
+            resultado.append({
+                "id": vet["id_veterinario"],
+                "nombre": vet["nombre"],
+                "apellidos": vet["apellidos"],
+                "clinica": vet["clinica"]
+            })
+
+        return resultado
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    finally:
+        cursor.close()
+        conn.close()
