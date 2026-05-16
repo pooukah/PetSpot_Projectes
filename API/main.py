@@ -737,7 +737,6 @@ def eliminar_cita(id_cita: int, x_user_email: str = Header(None)):
     cursor = conn.cursor(dictionary=True)
 
     try:
-        # comprobar si es cliente o veterinario
         cursor.execute("""
             SELECT id_cliente, id_veterinario
             FROM cita
@@ -749,7 +748,6 @@ def eliminar_cita(id_cita: int, x_user_email: str = Header(None)):
         if not cita:
             raise HTTPException(status_code=404, detail="Cita no encontrada")
 
-        # verificar permisos
         cursor.execute("""
             SELECT id_cliente
             FROM cliente
@@ -768,14 +766,11 @@ def eliminar_cita(id_cita: int, x_user_email: str = Header(None)):
 
         if cliente and cliente["id_cliente"] == cita["id_cliente"]:
             permitido = True
-
         if vet and vet["id_veterinario"] == cita["id_veterinario"]:
             permitido = True
-
         if not permitido:
             raise HTTPException(status_code=403, detail="No tienes permiso")
 
-        # borrar cita
         cursor.execute("""
             DELETE FROM cita WHERE id_cita = %s
         """, (id_cita,))

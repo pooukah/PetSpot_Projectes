@@ -1,4 +1,28 @@
-// 1. FUNCIONES (definidas al principio para que no den error)
+let mascotasList = document.getElementById('mascotas-list');
+let citasList = document.getElementById('citas-list');
+let chipFecha = document.getElementById('date-chip');
+
+let email = sessionStorage.getItem('user_email');
+let misMascotas =[];
+let todasLasCitas = [];
+let dias  = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+let meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+let hoy   = new Date();
+if (chipFecha) {
+  chipFecha.textContent = dias[hoy.getDay()] + ', ' + hoy.getDate() + ' de ' + meses[hoy.getMonth()] + ' ' + hoy.getFullYear();
+}
+
+PetSpot.init('cliente');
+buildClienteLayout('inicio');
+
+ponerIcono(document.getElementById('qi-citas'),  Icons.calendar);
+ponerIcono(document.getElementById('qi-chat'),   Icons.chat);
+ponerIcono(document.getElementById('qi-mapa'),   Icons.map);
+ponerIcono(document.getElementById('qi-tienda'), Icons.shop);
+ponerIcono(document.getElementById('icon-cal'),  Icons.calendar);
+ponerIcono(document.getElementById('icon-paw'),  Icons.paw);
+
+// FUNCIONES 
 const crearTarjetaCita = function(c) {
   let card = crearEl('div', { className: 'cita-card' });
 
@@ -32,12 +56,72 @@ const crearTarjetaCita = function(c) {
   return card;
 };
 
+async function cargarMascotasInicio() {
+  try {
+    let email = sessionStorage.getItem('user_email');
+
+    let response = await fetch(`http://127.0.0.1:8000/api/mascotas/mis-mascotas`, {
+      headers: { 'x-user-email': email }
+    });
+
+    if (!response.ok) throw new Error('Error cargando mascotas');
+    misMascotas = await response.json();
+    renderMascotasInicio();
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+async function cargarCitasInicio() {
+  try {
+    let response = await fetch(`http://127.0.0.1:8000/api/citas/mis-citas`, {
+      headers: { 'x-user-email': email }
+    });
+    if (!response.ok) throw new Error('Error cargando citas');
+
+    todasLasCitas = await response.json();
+    renderCitasInicio();
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function renderCitasInicio() {
+  citasList.innerHTML = '';
+
+  let proximas = todasLasCitas
+    .filter(c => c.estado !== 'completada' && c.estado !== 'cancelada')
+    .slice(0, 3);
+
+  if (proximas.length === 0) {
+    citasList.innerHTML = `<p style="text-align:center;color:var(--text3)">No tienes citas próximas</p>`;
+    return;
+  }
+
+  proximas.forEach(c => {
+    citasList.appendChild(crearTarjetaCita(c));
+  });
+}
+
+function renderMascotasInicio() {
+  mascotasList.innerHTML = '';
+
+  if (misMascotas.length === 0) {
+    mascotasList.innerHTML = `<p style="text-align:center;color:var(--text3)">Aún no has añadido mascotas</p>`;
+    return;
+  }
+
+  misMascotas.forEach(m => {
+    mascotasList.appendChild(crearTarjetaMascota(m));
+  });
+}
+
 const crearTarjetaMascota = function(m) {
   let card = crearEl('div', { className: 'pet-card' });
 
   let avatarDiv = crearEl('div', { className: 'pet-avatar' });
   let petIcons     = { dog: Icons.dog, cat: Icons.cat, rabbit: Icons.rabbit };
-  ponerIcono(avatarDiv, petIcons[m.type] || Icons.paw);
+  ponerIcono(avatarDiv, petIcons[m.type] ?? Icons.paw);
 
   let infoDiv  = document.createElement('div');
   let nameDiv  = crearEl('div', { className: 'pet-name',   textContent: m.nombre });
@@ -52,62 +136,5 @@ const crearTarjetaMascota = function(m) {
   return card;
 };
 
-// 2. INICIALIZACIÓN
-PetSpot.init('cliente');
-buildClienteLayout('inicio');
-
-// Fecha
-let dias  = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
-let meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-let hoy   = new Date();
-let chipFecha = document.getElementById('date-chip');
-if (chipFecha) {
-  chipFecha.textContent = dias[hoy.getDay()] + ', ' + hoy.getDate() + ' de ' + meses[hoy.getMonth()] + ' ' + hoy.getFullYear();
-}
-
-// Iconos rápidos
-ponerIcono(document.getElementById('qi-citas'),  Icons.calendar);
-ponerIcono(document.getElementById('qi-chat'),   Icons.chat);
-ponerIcono(document.getElementById('qi-mapa'),   Icons.map);
-ponerIcono(document.getElementById('qi-tienda'), Icons.shop);
-ponerIcono(document.getElementById('icon-cal'),  Icons.calendar);
-ponerIcono(document.getElementById('icon-paw'),  Icons.paw);
-
-// 3. CARGAR CITAS
-let citasList = document.getElementById('citas-list');
-let todasLasCitas = Almacen.cargar('citas');
-let proximas = [];
-for (let i = 0; i < todasLasCitas.length; i++) {
-  if (todasLasCitas[i].estado !== 'completada' && todasLasCitas[i].estado !== 'cancelada') {
-    proximas.push(todasLasCitas[i]);
-  }
-}
-proximas = proximas.slice(0, 3); 
-
-if (proximas.length === 0) {
-  let msgVacio = crearEl('p', {
-    textContent: 'No tienes citas próximas',
-    style: { textAlign: 'center', color: 'var(--text3)', padding: '20px', fontSize: '13px' }
-  });
-  citasList.appendChild(msgVacio);
-} else {
-  for (let i = 0; i < proximas.length; i++) {
-    citasList.appendChild(crearTarjetaCita(proximas[i]));
-  }
-}
-
-// 4. CARGAR MASCOTAS
-let mascotasList = document.getElementById('mascotas-list');
-let misMascotas  = Almacen.cargar('mascotas');
-
-if (misMascotas.length === 0) {
-  let msgVacioM = crearEl('p', {
-    textContent: 'Aún no has añadido mascotas',
-    style: { textAlign: 'center', color: 'var(--text3)', padding: '16px', fontSize: '13px', gridColumn: '1 / -1' }
-  });
-  mascotasList.appendChild(msgVacioM);
-} else {
-  for (let i = 0; i < misMascotas.length; i++) {
-    mascotasList.appendChild(crearTarjetaMascota(misMascotas[i]));
-  }
-}
+cargarCitasInicio();
+cargarMascotasInicio();
