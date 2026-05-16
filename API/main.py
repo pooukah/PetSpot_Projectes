@@ -516,26 +516,28 @@ def crear_cita(cita: dict, x_user_email: str = Header(None)):
 
     try:
         cursor.execute("""
-            SELECT id_cliente
-            FROM cliente
+            SELECT id_veterinario
+            FROM veterinario
             WHERE email = %s
         """, (x_user_email,))
+
+        vet = cursor.fetchone()
+
+        if not vet:
+            raise HTTPException(status_code=404, detail="Veterinario no encontrado")
+
+        id_veterinario = vet["id_veterinario"]
+
+        cursor.execute("""
+            SELECT id_cliente
+            FROM cliente
+            WHERE id_cliente = %s
+        """, (cita.get('cliente_id'),))
 
         cliente = cursor.fetchone()
 
         if not cliente:
             raise HTTPException(status_code=404, detail="Cliente no encontrado")
-
-        id_cliente = cliente['id_cliente']
-
-        cursor.execute("""
-            SELECT id_veterinario
-            FROM veterinario
-            WHERE id_veterinario = %s
-        """, (cita.get('id_veterinario'),))
-
-        if not cursor.fetchone():
-            raise HTTPException(status_code=404, detail="Veterinario no encontrado")
 
         cursor.execute("""
             SELECT id_mascota
@@ -543,28 +545,29 @@ def crear_cita(cita: dict, x_user_email: str = Header(None)):
             WHERE id_mascota = %s
               AND id_cliente = %s
         """, (
-            cita.get('id_mascota'),
-            id_cliente
+            cita.get('mascota_id'),
+            cita.get('cliente_id')
         ))
 
-        if not cursor.fetchone():
+        mascota = cursor.fetchone()
+
+        if not mascota:
             raise HTTPException(status_code=404, detail="Mascota no encontrada")
 
         cursor.execute("""
             INSERT INTO cita
             (id_cliente, id_veterinario, id_mascota, fecha, hora, motivo, estado)
-            VALUES (%s, %s, %s, %s, %s, %s, 'pendiente')
+            VALUES (%s, %s, %s, %s, %s, %s, 'confirmada')
         """, (
-            id_cliente,
-            cita.get('id_veterinario'),
-            cita.get('id_mascota'),
+            cita.get('cliente_id'),
+            id_veterinario,
+            cita.get('mascota_id'),
             cita.get('fecha'),
             cita.get('hora'),
             cita.get('motivo')
         ))
 
         conn.commit()
-
         return {
             "message": "Cita creada correctamente",
             "id_cita": cursor.lastrowid
@@ -572,11 +575,9 @@ def crear_cita(cita: dict, x_user_email: str = Header(None)):
 
     except HTTPException:
         raise
-
     except Exception as e:
         conn.rollback()
         raise HTTPException(status_code=500, detail=str(e))
-
     finally:
         cursor.close()
         conn.close()
@@ -854,6 +855,39 @@ def get_perfil_cliente(email: str):
         cursor.close()
         conn.close()
 
+##################################################### COGER INFO PARA PERFIL VETERINARIO
+@app.get("/auth/perfil/veterinario/{email}")
+def get_perfil_veterinario(email: str):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        cursor.execute("""
+            SELECT
+                v.nombre,
+                v.apellidos,
+                v.telefono,
+                v.email,
+                v.numero_colegiado,
+                v.especialidad,
+                v.años_experiencia,
+                c.nombre AS clinica
+            FROM veterinario v
+            LEFT JOIN clinica c
+            ON v.id_clinica = c.id_clinica
+            WHERE v.email = %s
+        """, (email,))
+
+        data = cursor.fetchone()
+
+        if not data:
+            raise HTTPException(status_code=404, detail="Veterinario no encontrado")
+        return data
+
+    finally:
+        cursor.close()
+        conn.close()
+
 ##################################################### 21. ACTUALIZAR PERFIL (cliente)
 @app.put("/auth/perfil/cliente/{email}")
 def update_perfil_cliente(email: str, datos: dict):
@@ -882,37 +916,97 @@ def update_perfil_cliente(email: str, datos: dict):
         cursor.close()
         conn.close()
 
+##################################################### ACTUALIZAR PERFIL VETERINARIO
+@app.put("/auth/perfil/veterinario/{email}")
+def update_perfil_veterinario(email: str, datos: dict):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("""
+            UPDATE veterinario
+            SET nombre = %s,
+                apellidos = %s,
+                telefono = %s,
+                numero_colegiado = %s,
+                especialidad = %s,
+                años_experiencia = %s
+            WHERE email = %s
+        """, (
+            datos.get('nombre'),
+            datos.get('apellidos'),
+            datos.get('telefono'),
+            datos.get('numero_colegiado'),
+            datos.get('especialidad'),
+            datos.get('años_experiencia'),
+            email
+        ))
+
+        conn.commit()
+
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Veterinario no encontrado")
+        return {"message": "Perfil actualizado correctamente"}
+
+    finally:
+        cursor.close()
+        conn.close()
 
 ##################################################### 22. CAMBIAR CONTRASEÑA (cliente)
 @app.put("/auth/cambiar-password/{email}")
 def cambiar_password(email: str, datos: dict, x_user_email: str = Header(None)):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    
+
     try:
         password_actual = datos.get('password_actual')
         password_nueva = datos.get('password_nueva')
-        
+
         if email != x_user_email:
-            raise HTTPException(status_code=403, detail="No autorizado")
-        
-        cursor.execute("SELECT password FROM cliente WHERE email = %s", (email,))
+            raise HTTPException(
+                status_code=403,
+                detail="No autorizado"
+            )
+
+        cursor.execute("""
+            SELECT password, 'cliente' AS tipo
+            FROM cliente
+            WHERE email = %s
+        """, (email,))
+
         user = cursor.fetchone()
-        
+
+        if not user:
+            cursor.execute("""
+                SELECT password, 'veterinario' AS tipo
+                FROM veterinario
+                WHERE email = %s
+            """, (email,))
+
+            user = cursor.fetchone()
         if not user:
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
-        
         if user['password'] != password_actual:
             raise HTTPException(status_code=401, detail="Contraseña actual incorrecta")
-        
         if len(password_nueva) < 6:
             raise HTTPException(status_code=400, detail="La nueva contraseña debe tener al menos 6 caracteres")
-        
-        cursor.execute("UPDATE cliente SET password = %s WHERE email = %s", (password_nueva, email))
+        if user['tipo'] == 'cliente':
+            cursor.execute("""
+                UPDATE cliente
+                SET password = %s
+                WHERE email = %s
+            """, (password_nueva, email))
+        else:
+            cursor.execute("""
+                UPDATE veterinario
+                SET password = %s
+                WHERE email = %s
+            """, (password_nueva, email))
+
         conn.commit()
-        
-        return {"message": "Contraseña actualizada correctamente"}
-    
+        return {
+            "message": "Contraseña actualizada correctamente"
+        }
     except HTTPException:
         raise
     except Exception as e:
@@ -972,6 +1066,99 @@ def get_mis_veterinarios(x_user_email: str = Header(None)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+    finally:
+        cursor.close()
+        conn.close()
+
+##################################################### lomismoperopara clientes
+@app.get("/api/clientes/mis-clientes")
+def get_clientes_mi_clinica(x_user_email: str = Header(None)):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        cursor.execute("""
+            SELECT id_clinica
+            FROM veterinario
+            WHERE email = %s
+        """, (x_user_email,))
+
+        vet = cursor.fetchone()
+
+        if not vet or not vet['id_clinica']:
+            return []
+
+        id_clinica = vet['id_clinica']
+
+        cursor.execute("""
+            SELECT
+                id_cliente,
+                nombre,
+                apellidos
+            FROM cliente
+            WHERE id_clinica = %s
+            ORDER BY nombre ASC
+        """, (id_clinica,))
+
+        clientes = cursor.fetchall()
+
+        resultado = []
+        for cliente in clientes:
+            resultado.append({
+                "id_cliente": cliente["id_cliente"],
+                "nombre": cliente["nombre"],
+                "apellidos": cliente["apellidos"]
+            })
+        return resultado
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
+
+##################################################### LAS MASCOTAS PARA LA CITADEVET
+@app.get("/api/mascotas/cliente/{id_cliente}")
+def get_mascotas_cliente(id_cliente: int, x_user_email: str = Header(None)):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        cursor.execute("""
+            SELECT id_clinica
+            FROM veterinario
+            WHERE email = %s
+        """, (x_user_email,))
+
+        vet = cursor.fetchone()
+
+        if not vet:
+            raise HTTPException(status_code=404, detail="Veterinario no encontrado")
+
+        cursor.execute("""
+            SELECT id_cliente
+            FROM cliente
+            WHERE id_cliente = %s
+              AND id_clinica = %s
+        """, (id_cliente, vet["id_clinica"]))
+        cliente = cursor.fetchone()
+        if not cliente:
+            raise HTTPException(status_code=403, detail="Cliente no válido")
+
+        cursor.execute("""
+            SELECT
+                id_mascota,
+                nombre
+            FROM mascota
+            WHERE id_cliente = %s
+            ORDER BY nombre ASC
+        """, (id_cliente,))
+
+        mascotas = cursor.fetchall()
+        return mascotas
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
     finally:
         cursor.close()
         conn.close()
