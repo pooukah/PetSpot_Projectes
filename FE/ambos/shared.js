@@ -97,10 +97,10 @@ const PetSpot = {
   },
 
   getPlan: function() {
-    return localStorage.getItem('ps_plan') || 'basico';
+    return sessionStorage.getItem('ps_plan') || 'basico';
   },
   setPlan: function(plan) {
-    localStorage.setItem('ps_plan', plan);
+    sessionStorage.setItem('ps_plan', plan);
   }
 
 };
@@ -114,17 +114,17 @@ let Almacen = {
   },
 
   guardar: function(tipo, datos) {
-    localStorage.setItem(this.clave(tipo), JSON.stringify(datos));
+    sessionStorage.setItem(this.clave(tipo), JSON.stringify(datos));
   },
 
   cargar: function(tipo) {
-    let raw = localStorage.getItem(this.clave(tipo));
+    let raw = sessionStorage.getItem(this.clave(tipo));
     if (raw) return JSON.parse(raw);
     return [];
   },
 
   borrar: function(tipo) {
-    localStorage.removeItem(this.clave(tipo));
+    sessionStorage.removeItem(this.clave(tipo));
   }
 
 };

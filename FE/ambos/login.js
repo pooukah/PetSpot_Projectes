@@ -26,7 +26,7 @@ const seleccionarPerfil = function(tipo){
 
 // USO INNERHTML EN VARIOS JS PARA LOS SVG, PERDONAME ORIOL
 const actualizarIconoTema = function(){
-  let oscuro = localStorage.getItem('ps_dark') !== 'false';
+  let oscuro = sesionStorage.getItem('ps_dark') !== 'false';
   ponerIcono(loginThemeIcon, oscuro ? Icons.moon : Icons.sun);
   loginThemeIcon.classList.toggle('on', !oscuro);
 
@@ -62,6 +62,9 @@ const iniciarSesion = async function() {
     }
 
     const data = await response.json();
+    sessionStorage.setItem('user_id', String(data.id));
+    sessionStorage.setItem('user_email', data.email);
+    sessionStorage.setItem('user_rol', data.rol);
 
     PetSpot.setUser({
       tipo: data.rol,
@@ -69,10 +72,6 @@ const iniciarSesion = async function() {
       email: data.email,
       id: data.id
     });
-
-    localStorage.setItem('user_id', data.id);
-    localStorage.setItem('user_email', data.email);
-    localStorage.setItem('user_rol', data.rol);
 
     const destino = data.rol === 'cliente' 
       ? 'cliente/htmls/inicio.html' 

@@ -11,8 +11,8 @@ let filtroActual = 'todas';
 // TODAS LAS DEL VETERINARIO LOGEADO
 const cargarCitas = async function() {
   try {
-    let email = localStorage.getItem('user_email');
-    let response = await fetch(`https://localhost:443/citas/veterinario/mis-citas`, { // HACER BIEN EL FECTH
+    let email = sessionStorage.getItem('user_email');
+    let response = await fetch(`http://127.0.0.1:8000/api/citas/veterinario/mis-citas`, { // HACER BIEN EL FECTH
       headers: { 'x-user-email': email }
     });
     if (!response.ok) throw new Error('Error al cargar citas');
@@ -60,7 +60,6 @@ const renderCitas = function() {
     if (c.estado === 'pendiente') estadoClass = 'badge-orange';
     if (c.estado === 'confirmada') estadoClass = 'badge-green';
     if (c.estado === 'cancelada') estadoClass = 'badge-red';
-    if (c.estado === 'completada') estadoClass = 'badge-blue';
     let tdEstado = document.createElement('td');
     tdEstado.appendChild(crearEl('span', { className: 'badge ' + estadoClass, textContent: c.estado }));
     fila.appendChild(tdEstado);
@@ -68,22 +67,25 @@ const renderCitas = function() {
     let tdAcciones = document.createElement('td');
     let btnConfirmar = crearEl('button', { className: 'btn btn-success btn-sm', textContent: 'Confirmar' });
     let btnCancelar = crearEl('button', { className: 'btn btn-danger btn-sm', textContent: 'Cancelar' });
-    let btnCompletar = crearEl('button', { className: 'btn btn-primary btn-sm', textContent: 'Completar' });
+    let btnEliminar = crearEl('button', { className: 'btn btn-dark btn-sm', textContent: 'Eliminar' });
 
-    if (c.estado === 'pendiente') {
+    if(c.estado==='pendiente'){
       btnConfirmar.addEventListener('click', () => cambiarEstado(c.id_cita, 'confirmada'));
-      btnCancelar.addEventListener('click', () => cambiarEstado(c.id_cita, 'cancelada'));
+      btnCancelar.addEventListener('click', () => eliminarCita(c.id_cita));
       tdAcciones.appendChild(btnConfirmar);
       tdAcciones.appendChild(btnCancelar);
-    } else if (c.estado === 'confirmada') {
-      btnCompletar.addEventListener('click', () => cambiarEstado(c.id_cita, 'completada'));
-      btnCancelar.addEventListener('click', () => cambiarEstado(c.id_cita, 'cancelada'));
-      tdAcciones.appendChild(btnCompletar);
+    }else if(c.estado==='confirmada'){
+      btnCancelar.addEventListener('click', () => eliminarCita(c.id_cita));
       tdAcciones.appendChild(btnCancelar);
-    } else {
-      tdAcciones.textContent = '—';
+    }else if (c.estado === 'cancelada') {
+      btnEliminar.addEventListener('click', () => {
+        fila.remove();
+      });
+      tdAcciones.appendChild(btnEliminar);
+    }else{
+      btnEliminar.addEventListener('click', () => eliminarCita(c.id_cita));
+      tdAcciones.appendChild(btnEliminar);
     }
-
     fila.appendChild(tdAcciones);
     tbody.appendChild(fila);
   }
@@ -91,8 +93,8 @@ const renderCitas = function() {
 // CAMBIA DE CONFIRMAR CANCELAR O NOSE
 const cambiarEstado = async function(id, nuevoEstado) {
   try {
-    let email = localStorage.getItem('user_email');
-    let response = await fetch(`https://localhost:443/citas/${id}/estado`, { // HACER BIEN EL FETCH
+    let email = sessionStorage.getItem('user_email');
+    let response = await fetch(`http://127.0.0.1:8000/api/citas/${id}/estado`, { // HACER BIEN EL FETCH
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'x-user-email': email },
       body: JSON.stringify({ estado: nuevoEstado })
@@ -103,6 +105,30 @@ const cambiarEstado = async function(id, nuevoEstado) {
   } catch (error) {
     console.error('Error:', error);
     PetSpot.notify('Error al actualizar la cita');
+  }
+};
+
+const eliminarCita = async function(id) {
+  try {
+    let email = sessionStorage.getItem('user_email');
+    let response = await fetch(
+      `http://127.0.0.1:8000/api/citas/${id}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'x-user-email': email
+        }
+      }
+    );
+    if (!response.ok) {
+      throw new Error('Error al eliminar cita');
+    }
+    PetSpot.notify('Cita eliminada');
+    citas = citas.filter(c => c.id_cita !== id);
+    renderCitas();
+  }catch(error){
+    console.error(error);
+    PetSpot.notify('Error al eliminar la cita');
   }
 };
 
@@ -146,9 +172,9 @@ const addCita = async function() {
   }
 
   try {
-    let email = localStorage.getItem('user_email');
+    let email = sessionStorage.getItem('user_email');
     // CREA NUEV CITA
-    let response = await fetch(`https://localhost:443/citas`, { // HACER BIEN EL FETCH
+    let response = await fetch(`http://127.0.0.1:8000/citas`, { // HACER BIEN EL FETCH
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-user-email': email },
       body: JSON.stringify({
@@ -176,9 +202,9 @@ document.getElementById('btn-nueva').addEventListener('click', function() {
 
 const cargarClientesMascotas = async function() {
   try {
-    let email = localStorage.getItem('user_email');
+    let email = sessionStorage.getItem('user_email');
     // LISTA DE LOS CLIENTES DEL VET LOGEADO
-    let response = await fetch(`https://localhost:443/clientes`, { // HACER BIEN EL FETCH
+    let response = await fetch(`http://127.0.0.1:8000/clientes`, { // HACER BIEN EL FETCH
       headers: { 'x-user-email': email }
     });
     if (!response.ok) throw new Error('Error al cargar clientes');
@@ -200,9 +226,9 @@ document.getElementById('nueva-cliente').addEventListener('change', async functi
   let clienteId = this.value;
   if (!clienteId) return;
   try {
-    let email = localStorage.getItem('user_email');
+    let email = sessionStorage.getItem('user_email');
     // LAS MASCOTAS DEUN LCIENTE EN ESPECIFICO
-    let response = await fetch(`https://localhost:443/mascotas/cliente/${clienteId}`, { // HACER BIEN EL FECTH
+    let response = await fetch(`http://127.0.0.1:8000/mascotas/cliente/${clienteId}`, { // HACER BIEN EL FECTH
       headers: { 'x-user-email': email }
     });
     if (!response.ok) throw new Error('Error al cargar mascotas');

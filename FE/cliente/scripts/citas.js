@@ -1,3 +1,4 @@
+////////////////////////////////////////////////////////// INIT
 PetSpot.init('cliente');
 buildClienteLayout('citas');
 
@@ -5,10 +6,17 @@ ponerIcono(document.getElementById('btn-nueva-icon'), Icons.plus);
 ponerIcono(document.getElementById('icon-x'),         Icons.x);
 ponerIcono(document.getElementById('icon-cal2'),      Icons.calendar);
 
-let listaCitas = Almacen.cargar('citas');
+////////////////////////////////////////////////////////// VARIABLES
+let listaCitas = [];
+let mesActual  = new Date().getMonth();
+let anioActual = new Date().getFullYear();
+let diaSeleccionado = null;
+let usuarioActual = sessionStorage.getItem('user_email');
+let nombresMeses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
+////////////////////////////////////////////////////////// FUNCIONES
 const cargarMascotasCliente = async function() {
-  const email = localStorage.getItem('user_email');
+  const email = sessionStorage.getItem('user_email');
   console.log(email);
   if (!email) return;
   
@@ -46,7 +54,7 @@ const cargarMascotasCliente = async function() {
 };
 
 const cargarVeterinariosCliente = async function() {
-  const email = localStorage.getItem('user_email');
+  const email = sessionStorage.getItem('user_email');
 
   if (!email) return;
 
@@ -110,27 +118,56 @@ const switchTab = function(tab, el) {
   if (tab === 'calendario') renderCalendario();
 };
 
- const renderProximas = function() {
+const renderProximas = function() {
   let lista = document.getElementById('list-proximas');
-  while (lista.firstChild) lista.removeChild(lista.firstChild);
-
+  while (lista.firstChild) {
+    lista.removeChild(lista.firstChild);
+  }
   let proximas = [];
   for (let i = 0; i < listaCitas.length; i++) {
-    if (listaCitas[i].estado !== 'cancelada') {
       proximas.push(listaCitas[i]);
-    }
   }
-
   if (proximas.length === 0) {
     lista.appendChild(crearEl('p', {
       textContent: 'No tienes citas próximas',
-      style: { textAlign: 'center', color: 'var(--text3)', padding: '24px', fontSize: '13px' }
+      style: {
+        textAlign: 'center',
+        color: 'var(--text3)',
+        padding: '24px',
+        fontSize: '13px'
+      }
     }));
     return;
   }
-
   for (let i = 0; i < proximas.length; i++) {
     lista.appendChild(crearCardProxima(proximas[i]));
+  }
+};
+
+const cargarCitasCliente = async function() {
+  try {
+    const email = sessionStorage.getItem('user_email');
+    listaCitas = [];
+    renderProximas();
+    renderCalendario();
+    const response = await fetch(
+      'http://127.0.0.1:8000/api/citas/mis-citas',
+      {
+        headers: {
+          'x-user-email': email
+        }
+      }
+    );
+    if (!response.ok) {
+      throw new Error('Error al cargar citas');
+    }
+    const data = await response.json();
+    listaCitas = Array.isArray(data) ? data : [];
+    renderProximas();
+    renderCalendario();
+  }catch (error){
+    console.error(error);
+    PetSpot.notify('Error al cargar citas');
   }
 };
 
@@ -175,11 +212,8 @@ const crearCardProxima = function(c) {
 };
 
 const cancelarCita = async function(id, cardEl) {
-
   try {
-
-    const email = localStorage.getItem('user_email');
-
+    const email = sessionStorage.getItem('user_email');
     const response = await fetch(
       `http://127.0.0.1:8000/api/citas/${id}`,
       {
@@ -189,9 +223,7 @@ const cancelarCita = async function(id, cardEl) {
         }
       }
     );
-
     const data = await response.json();
-
     if (!response.ok) {
       throw new Error(data.detail || 'Error al eliminar cita');
     }
@@ -206,24 +238,13 @@ const cancelarCita = async function(id, cardEl) {
       }
     }, 300);
 
-    listaCitas = listaCitas.filter(c => c.id !== id);
-
-    Almacen.guardar('citas', listaCitas);
-
+    listaCitas = listaCitas.filter(c => c.id_cita !== id);
     PetSpot.notify('Cita cancelada');
-
-  } catch (error) {
-
+  }catch (error){
     console.error(error);
-
     PetSpot.notify('Error al cancelar la cita');
   }
 };
-
-let mesActual  = new Date().getMonth();
-let anioActual = new Date().getFullYear();
-let diaSeleccionado = null;
-let nombresMeses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
 const renderCalendario = function() {
   let tituloEl = document.getElementById('cal-title');
@@ -281,7 +302,7 @@ const crearHandlerDia = function(dia) {
 const tieneCitaEnDia = function(dia, mes, anio) {
   for (let i = 0; i < listaCitas.length; i++) {
     let c = listaCitas[i];
-    if (c.estado === 'cancelada' || c.estado === 'completada') continue;
+    if (c.estado === 'cancelada') continue;
     let fechaCalendario = String(dia).padStart(2, '0') + '/' + String(mes + 1).padStart(2, '0');
     if (c.fechaISO) {
       let partes = c.fechaISO.split('-');
@@ -300,7 +321,7 @@ const mostrarCitasDelDia = function(dia) {
   let citasDelDia = [];
   for (let i = 0; i < listaCitas.length; i++) {
     let c = listaCitas[i];
-    if (c.estado === 'cancelada' || c.estado === 'completada') continue;
+    if (c.estado === 'cancelada') continue;
     if (c.fechaISO) {
       let partes = c.fechaISO.split('-');
       if (parseInt(partes[2]) === dia && parseInt(partes[1]) === mesActual + 1) {
@@ -354,13 +375,10 @@ const closeModal = function() {
 };
 
 const solicitarCita = async function() {
-
   let mascota = document.getElementById('nueva-mascota').value;
-
   let vetSelectEl = document.getElementById('nueva-vet');
   let vetId = vetSelectEl.value;
   let vetTexto = vetSelectEl.options[vetSelectEl.selectedIndex].text;
-
   let motivo = document.getElementById('nueva-motivo').value.trim();
   let fechaInput = document.getElementById('nueva-fecha').value;
   let horaInput = document.getElementById('nueva-hora').value;
@@ -369,11 +387,8 @@ const solicitarCita = async function() {
     PetSpot.notify('Por favor, rellena todos los campos');
     return;
   }
-
-  try {
-
-    const email = localStorage.getItem('user_email');
-
+  try{
+    const email = sessionStorage.getItem('user_email');
     const response = await fetch('http://127.0.0.1:8000/api/citas/crear', {
       method: 'POST',
       headers: {
@@ -394,9 +409,7 @@ const solicitarCita = async function() {
     if (!response.ok) {
       throw new Error(data.detail || 'Error al crear cita');
     }
-
     let partes = fechaInput.split('-');
-
     let nueva = {
       id: data.id_cita,
       hora: horaInput,
@@ -411,31 +424,22 @@ const solicitarCita = async function() {
       estado: 'pendiente',
       clinica: vetTexto.split(' — ')[1] || 'PetSpot'
     };
-
     listaCitas.push(nueva);
-
-    Almacen.guardar('citas', listaCitas);
-
     closeModal();
-
     renderProximas();
-
     PetSpot.notify('Cita creada correctamente');
-
     document.getElementById('nueva-motivo').value = '';
     document.getElementById('nueva-fecha').value = '';
-
   } catch (error) {
-
     console.error(error);
-
     PetSpot.notify('Error al crear la cita');
   }
 };
 
+////////////////////////////////////////////////////////// ADD EVENT LISTENERS
 document.getElementById('btn-nueva').addEventListener('click', async function() {
   await cargarMascotasCliente();
   await cargarVeterinariosCliente();
   document.getElementById('modal-cita').classList.add('open');
 });
-renderProximas();
+cargarCitasCliente();

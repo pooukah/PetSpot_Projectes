@@ -54,7 +54,7 @@ const cargarClinicas = async function() {
 cargarClinicas();
 
 const cargarMascotas = async function() {
-  const email = localStorage.getItem('user_email');
+  const email = sessionStorage.getItem('user_email');
   if (!email) return;
   
   try {
@@ -94,7 +94,7 @@ const guardarDatos = async function() {
     return;
   }
 
-  const email = localStorage.getItem('user_email');
+  const email = sessionStorage.getItem('user_email');
   
   try{
     const response = await fetch(`http://127.0.0.1:8000/auth/perfil/cliente/${email}`, {
@@ -290,7 +290,7 @@ const crearHandlerGuardarMascota = function(id) {
     
     let fechaNacimiento = fechaInput || null;
 
-    const email = localStorage.getItem('user_email');
+    const email = sessionStorage.getItem('user_email');
     
     try {
       const response = await fetch(`http://127.0.0.1:8000/api/mascotas/${id}`, {
@@ -324,7 +324,7 @@ const crearHandlerGuardarMascota = function(id) {
 };
 
 const eliminarMascota = async function(id) {
-  const email = localStorage.getItem('user_email');
+  const email = sessionStorage.getItem('user_email');
   
   try {
     const response = await fetch(`http://127.0.0.1:8000/api/mascotas/${id}`, {
@@ -359,7 +359,7 @@ const addPet = async function() {
     return;
   }
 
-  const email = localStorage.getItem('user_email');
+  const email = sessionStorage.getItem('user_email');
   
   try {
     const response = await fetch(`http://127.0.0.1:8000/api/mascotas/crear`, {
@@ -440,7 +440,7 @@ const cambiarPassword = async function() {
     return;
   }
 
-  const email = localStorage.getItem('user_email');
+  const email = sessionStorage.getItem('user_email');
   
   try {
     const response = await fetch(`http://127.0.0.1:8000/auth/cambiar-password/${email}`, {
