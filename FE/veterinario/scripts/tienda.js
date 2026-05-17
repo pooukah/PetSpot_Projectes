@@ -5,9 +5,14 @@ ponerIcono(document.getElementById('icon-plus'), Icons.plus);
 ponerIcono(document.getElementById('icon-x-nuevo'), Icons.x);
 ponerIcono(document.getElementById('icon-x-editar'), Icons.x);
 
-document.getElementById('btn-nuevo').addEventListener('click', function() {
-  document.getElementById('modal-prod').classList.add('open');
-});
+const btnNuevo = document.getElementById('btn-nuevo');
+const modalProd = document.getElementById('modal-prod');
+
+if (btnNuevo && modalProd) {
+  btnNuevo.addEventListener('click', function () {
+    modalProd.classList.add('open');
+  });
+}
 
 const showTab = function(tab, el) {
   document.getElementById('tab-productos').style.display = tab === 'productos' ? '' : 'none';
@@ -33,23 +38,25 @@ const renderProductos = function() {
     let prodWrap = document.createElement('div');
     prodWrap.style.cssText = 'display:flex;align-items:center;gap:11px';
     let imgDiv = document.createElement('div');
-    imgDiv.style.cssText = 'width:40px;height:40px;background:var(--bg3);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden';
-    ponerIcono(imgDiv, Icons.box);
-    prodWrap.appendChild(imgDiv);
+    imgDiv.style.cssText = 'width:40px;height:40px;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--bg3)';
+    let img = document.createElement('img');
+    img.src = p.foto_url || '';
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover';
+
+    img.onerror = function () {
+      imgDiv.innerHTML = '';
+      ponerIcono(imgDiv, Icons.box);
+    };
+
+    imgDiv.appendChild(img);
     prodWrap.appendChild(crearEl('span', { textContent: p.nombre, style: { fontWeight: '600', fontSize: '14px' } }));
     td1.appendChild(prodWrap);
-
     let td2 = document.createElement('td');
     td2.appendChild(crearEl('span', { className: 'badge badge-blue', textContent: p.cat }));
-
     let td3 = document.createElement('td');
     td3.appendChild(crearEl('strong', { textContent: p.precio.toFixed(2) + '€', style: { color: 'var(--accent)', fontSize: '15px' } }));
-
     let td4 = document.createElement('td');
     td4.appendChild(crearEl('span', { className: lowStock ? 'stock-low' : 'stock-ok', textContent: (lowStock ? 'Stock bajo - ' : '') + p.stock + ' uds.' }));
-
-    let td5 = crearEl('td', { textContent: (p.ventas || 0) + ' vendidos', style: { color: 'var(--text2)' } });
-
     let td6 = document.createElement('td');
     let accionesDiv = document.createElement('div');
     accionesDiv.style.cssText = 'display:flex;gap:6px';
@@ -63,8 +70,11 @@ const renderProductos = function() {
     accionesDiv.appendChild(btnBorrar);
     td6.appendChild(accionesDiv);
 
-    fila.appendChild(td1); fila.appendChild(td2); fila.appendChild(td3);
-    fila.appendChild(td4); fila.appendChild(td5); fila.appendChild(td6);
+    fila.appendChild(td1); 
+    fila.appendChild(td2); 
+    fila.appendChild(td3);
+    fila.appendChild(td4);  
+    fila.appendChild(td6);
     tbody.appendChild(fila);
   }
 };
@@ -78,9 +88,9 @@ const crearHandlerEliminar = function(id) {
 };
 
 const eliminarProducto = async function(id) {
-  let email = localStorage.getItem('user_email');
+  let email = sessionStorage.getItem('user_email');
   try {
-    let response = await fetch(`https://localhost:443/productos/${id}`, {
+    let response = await fetch(`http://127.0.0.1:8000/productos/${id}`, {
       method: "DELETE",
       headers: { "x-user-email": email }
     });
@@ -102,9 +112,11 @@ const abrirEditar = function(id) {
   for (let i = 0; i < listaProductos.length; i++) {
     if (listaProductos[i].id === id) { prod = listaProductos[i]; break; }
   }
+  console.log(listaProductos);
   if (!prod) return;
   productoEditandoId = id;
 
+  document.getElementById('edit-foto').value = prod.foto_url;
   document.getElementById('edit-nombre').value = prod.nombre;
   document.getElementById('edit-precio').value = prod.precio;
   document.getElementById('edit-stock').value  = prod.stock;
@@ -119,21 +131,22 @@ const guardarEdicion = async function() {
   let precio = parseFloat(document.getElementById('edit-precio').value);
   let stock  = parseInt(document.getElementById('edit-stock').value);
   let cat    = document.getElementById('edit-cat').value;
+  let foto_url = document.getElementById('edit-foto').value.trim();
 
   if (!nombre || isNaN(precio) || isNaN(stock)) {
     PetSpot.notify('Rellena todos los campos correctamente');
     return;
   }
 
-  let email = localStorage.getItem('user_email');
+  let email = sessionStorage.getItem('user_email');
   try {
-    let response = await fetch(`https://localhost:443/productos/${productoEditandoId}`, {
+    let response = await fetch(`http://127.0.0.1:8000/productos/${productoEditandoId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
         "x-user-email": email
       },
-      body: JSON.stringify({ nombre, categoria: cat, precio, stock })
+      body: JSON.stringify({ nombre, categoria: cat, precio, stock, foto_url })
     });
 
     if (!response.ok) {
@@ -150,11 +163,11 @@ const guardarEdicion = async function() {
 };
 
 const cargarMisProductos = async function() {
-  let email = localStorage.getItem('user_email');
+  let email = sessionStorage.getItem('user_email');
   if (!email) return;
 
   try {
-    let response = await fetch(`https://localhost:443/productos/mis-productos`, {
+    let response = await fetch(`http://127.0.0.1:8000/productos/mis-productos`, {
       method: "GET",
       headers: { "x-user-email": email }
     });
@@ -162,14 +175,13 @@ const cargarMisProductos = async function() {
     if (!response.ok) throw new Error('Error al cargar productos');
 
     let productos = await response.json();
-    
     listaProductos = productos.map(p => ({
       id: p.id_producto,
       nombre: p.nombre,
       precio: p.precio,
       stock: p.stock,
-      ventas: p.veces_vendido || 0,
-      cat: p.categoria
+      cat: p.categoria,
+      foto_url: p.foto_url   
     }));
     
     renderProductos();
@@ -184,36 +196,39 @@ const addProduct = async function() {
   let precio = parseFloat(document.getElementById('nuevo-precio').value);
   let stock  = parseInt(document.getElementById('nuevo-stock').value);
   let cat    = document.getElementById('nuevo-cat').value;
+  let foto_url = document.getElementById('nuevo-foto').value.trim();
 
   if (!nombre || isNaN(precio) || isNaN(stock)) {
     PetSpot.notify('Rellena todos los campos');
     return;
   }
 
-  let email = localStorage.getItem('user_email');
+  let email = sessionStorage.getItem('user_email');
   if (!email) {
     PetSpot.notify('No se encontró el usuario');
     return;
   }
 
   try {
-    let response = await fetch("https://localhost:443/productos", {
+    let response = await fetch("http://127.0.0.1:8000/productos", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "x-user-email": email
       },
       body: JSON.stringify({
-        nombre: nombre,
+        nombre,
         categoria: cat,
-        precio: precio,
-        stock: stock
+        precio,
+        stock,
+        foto_url
       })
     });
 
     if (!response.ok) {
       let err = await response.json();
-      throw new Error(err.detail || 'Error al crear producto');
+      console.log("ERROR BACKEND:", err);
+      throw new Error(JSON.stringify(err));
     }
 
     let data = await response.json();

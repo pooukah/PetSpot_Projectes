@@ -171,12 +171,11 @@ def create_producto(producto: NewProd, x_user_email: str = Header(None)):
         
         cursor.execute("""
             INSERT INTO producto 
-            (nombre, categoria, descripcion, precio, stock, foto_url, id_clinica)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            (nombre, categoria, precio, stock, foto_url, id_clinica)
+            VALUES (%s, %s, %s, %s, %s, %s)
         """, (
             producto.nombre,
             producto.categoria,
-            producto.descripcion,
             producto.precio,
             producto.stock,
             producto.foto_url,
@@ -200,25 +199,26 @@ def create_producto(producto: NewProd, x_user_email: str = Header(None)):
 def get_mis_productos(x_user_email: str = Header(None)):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    
+
     try:
+        if not x_user_email:
+            raise HTTPException(status_code=400, detail="Falta header x-user-email")
+
         cursor.execute("SELECT id_clinica FROM veterinario WHERE email = %s", (x_user_email,))
         vet = cursor.fetchone()
-        
+
         if not vet:
             raise HTTPException(status_code=404, detail="Veterinario no encontrado")
-        
+
         id_clinica = vet['id_clinica']
-        
         cursor.execute("""
-            SELECT id_producto, nombre, categoria, descripcion, precio, stock, foto_url, veces_vendido
+            SELECT id_producto, nombre, categoria, precio, stock, foto_url
             FROM producto 
             WHERE id_clinica = %s
             ORDER BY id_producto DESC
         """, (id_clinica,))
-        
         return cursor.fetchall()
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -228,36 +228,23 @@ def get_mis_productos(x_user_email: str = Header(None)):
         conn.close()
  
 ##################################################### 8. UPDATE PRODUCT (vet)
-@app.put("/productos/{id_producto}")
-def update_producto(id_producto: int, producto: NewProd, x_user_email: str = Header(None)):
+@app.get("/productos/{id_producto}")
+def get_producto(id_producto: int, x_user_email: str = Header(None)):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    
+
     try:
         cursor.execute("""
-            SELECT p.id_producto
+            SELECT p.*
             FROM producto p
             JOIN veterinario v ON p.id_clinica = v.id_clinica
             WHERE p.id_producto = %s AND v.email = %s
         """, (id_producto, x_user_email))
-        
-        if not cursor.fetchone():
-            raise HTTPException(status_code=404, detail="Producto no encontrado o no tienes permiso")
-        
-        cursor.execute("""
-            UPDATE producto 
-            SET nombre = %s, categoria = %s, descripcion = %s, precio = %s, stock = %s,foto_url = %s
-            WHERE id_producto = %s
-        """, (producto.nombre, producto.categoria, producto.descripcion, producto.precio, producto.stock, producto.foto_url, id_producto))
-        conn.commit()
-        
-        return {"message": "Producto actualizado correctamente"}
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        prod = cursor.fetchone()
+
+        if not prod:
+            raise HTTPException(status_code=404, detail="Producto no encontrado")
+        return prod
     finally:
         cursor.close()
         conn.close()

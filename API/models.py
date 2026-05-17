@@ -55,10 +55,10 @@ class Login(BaseModel):
 class NewProd(BaseModel):
     nombre: str
     categoria: str
-    descripcion: str
+    descripcion: str | None = None
     precio: float
     stock: int
-    foto_url: str
+    foto_url: str | None = None
 
 ########################################### BÚSQUEDA
 # PARA BUSCAR CLIENTES
