@@ -170,9 +170,18 @@ def create_producto(producto: NewProd, x_user_email: str = Header(None)):
         id_clinica = vet['id_clinica']
         
         cursor.execute("""
-            INSERT INTO producto (nombre, categoria, precio, stock, id_clinica)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (producto.nombre, producto.categoria, producto.precio, producto.stock, id_clinica))
+            INSERT INTO producto 
+            (nombre, categoria, descripcion, precio, stock, foto_url, id_clinica)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (
+            producto.nombre,
+            producto.categoria,
+            producto.descripcion,
+            producto.precio,
+            producto.stock,
+            producto.foto_url,
+            id_clinica
+        ))
         conn.commit()
         
         return {"message": "Producto creado correctamente", "id_producto": cursor.lastrowid}
@@ -202,7 +211,7 @@ def get_mis_productos(x_user_email: str = Header(None)):
         id_clinica = vet['id_clinica']
         
         cursor.execute("""
-            SELECT id_producto, nombre, categoria, precio, stock, veces_vendido
+            SELECT id_producto, nombre, categoria, descripcion, precio, stock, foto_url, veces_vendido
             FROM producto 
             WHERE id_clinica = %s
             ORDER BY id_producto DESC
@@ -237,9 +246,9 @@ def update_producto(id_producto: int, producto: NewProd, x_user_email: str = Hea
         
         cursor.execute("""
             UPDATE producto 
-            SET nombre = %s, categoria = %s, precio = %s, stock = %s
+            SET nombre = %s, categoria = %s, descripcion = %s, precio = %s, stock = %s,foto_url = %s
             WHERE id_producto = %s
-        """, (producto.nombre, producto.categoria, producto.precio, producto.stock, id_producto))
+        """, (producto.nombre, producto.categoria, producto.descripcion, producto.precio, producto.stock, producto.foto_url, id_producto))
         conn.commit()
         
         return {"message": "Producto actualizado correctamente"}
@@ -516,15 +525,59 @@ def crear_cita(cita: dict, x_user_email: str = Header(None)):
 
     try:
         cursor.execute("""
+            SELECT id_cliente
+            FROM cliente
+            WHERE email = %s
+        """, (x_user_email,))
+
+        cliente_logeado = cursor.fetchone()
+        if cliente_logeado:
+            id_cliente = cliente_logeado["id_cliente"]
+            cursor.execute("""
+                SELECT id_mascota
+                FROM mascota
+                WHERE id_mascota = %s
+                  AND id_cliente = %s
+            """, (
+                cita.get('id_mascota'),
+                id_cliente
+            ))
+            mascota = cursor.fetchone()
+
+            if not mascota:
+                raise HTTPException(status_code=404, detail="Mascota no encontrada")
+            cursor.execute("""
+                INSERT INTO cita
+                (
+                    id_cliente,
+                    id_veterinario,
+                    id_mascota,
+                    fecha,
+                    hora,
+                    motivo,
+                    estado
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, 'pendiente')
+            """, (
+                id_cliente,
+                cita.get('id_veterinario'),
+                cita.get('id_mascota'),
+                cita.get('fecha'),
+                cita.get('hora'),
+                cita.get('motivo')
+            ))
+
+            conn.commit()
+            return {"message": "Cita solicitada correctamente", "id_cita": cursor.lastrowid}
+        cursor.execute("""
             SELECT id_veterinario
             FROM veterinario
             WHERE email = %s
         """, (x_user_email,))
 
         vet = cursor.fetchone()
-
         if not vet:
-            raise HTTPException(status_code=404, detail="Veterinario no encontrado")
+            raise HTTPException(status_code=404, detail="Usuario no válido")
 
         id_veterinario = vet["id_veterinario"]
 
@@ -538,7 +591,6 @@ def crear_cita(cita: dict, x_user_email: str = Header(None)):
 
         if not cliente:
             raise HTTPException(status_code=404, detail="Cliente no encontrado")
-
         cursor.execute("""
             SELECT id_mascota
             FROM mascota
@@ -553,10 +605,17 @@ def crear_cita(cita: dict, x_user_email: str = Header(None)):
 
         if not mascota:
             raise HTTPException(status_code=404, detail="Mascota no encontrada")
-
         cursor.execute("""
             INSERT INTO cita
-            (id_cliente, id_veterinario, id_mascota, fecha, hora, motivo, estado)
+            (
+                id_cliente,
+                id_veterinario,
+                id_mascota,
+                fecha,
+                hora,
+                motivo,
+                estado
+            )
             VALUES (%s, %s, %s, %s, %s, %s, 'confirmada')
         """, (
             cita.get('cliente_id'),
@@ -568,11 +627,7 @@ def crear_cita(cita: dict, x_user_email: str = Header(None)):
         ))
 
         conn.commit()
-        return {
-            "message": "Cita creada correctamente",
-            "id_cita": cursor.lastrowid
-        }
-
+        return {"message": "Cita creada correctamente", "id_cita": cursor.lastrowid}
     except HTTPException:
         raise
     except Exception as e:
@@ -694,6 +749,46 @@ def get_citas_veterinario(x_user_email: str = Header(None)):
                 "mascota_nombre": c["mascota_nombre"]
             })
         return resultado
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cursor.close()
+        conn.close()
+
+##################################################### OBTENER PEDIDOS DEL VETERINARIO
+@app.get("/api/pedidos/veterinario/mis-pedidos")
+def get_pedidos_veterinario(x_user_email: str = Header(None)):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        cursor.execute("""
+            SELECT id_clinica
+            FROM veterinario
+            WHERE email = %s
+        """, (x_user_email,))
+
+        vet = cursor.fetchone()
+
+        if not vet:
+            raise HTTPException(status_code=404, detail="Veterinario no encontrado")
+
+        cursor.execute("""
+            SELECT
+                id_pedido,
+                numero_pedido,
+                titular_nombre,
+                direccion_envio,
+                total,
+                estado,
+                fecha_pedido
+            FROM pedido
+            ORDER BY fecha_pedido DESC
+        """)
+
+        pedidos = cursor.fetchall()
+        return pedidos
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:

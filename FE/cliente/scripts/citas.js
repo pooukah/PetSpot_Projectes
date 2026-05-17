@@ -238,7 +238,7 @@ const cancelarCita = async function(id, cardEl) {
       }
     }, 300);
 
-    listaCitas = listaCitas.filter(c => c.id_cita !== id);
+    listaCitas = listaCitas.filter(c => c.id !== id);
     PetSpot.notify('Cita cancelada');
   }catch (error){
     console.error(error);

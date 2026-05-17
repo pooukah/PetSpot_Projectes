@@ -1,6 +1,6 @@
 .vet-inicio-grid {
   display: grid;
-  grid-template-columns: 1fr 320px;
+  grid-template-columns: 1fr;
   gap: 18px;
 }
 

@@ -26,9 +26,9 @@ const seleccionarPerfil = function(tipo){
 
 // USO INNERHTML EN VARIOS JS PARA LOS SVG, PERDONAME ORIOL
 const actualizarIconoTema = function(){
-  let oscuro = sesionStorage.getItem('ps_dark') !== 'false';
+  let oscuro = localStorage.getItem('ps_dark') !== 'false';
   ponerIcono(loginThemeIcon, oscuro ? Icons.moon : Icons.sun);
-  loginThemeIcon.classList.toggle('on', !oscuro);
+  loginThemeToggle.classList.toggle('on', !oscuro);
 
   iconCliente.innerHTML = Icons.profileUser || Icons.user;
   iconVet.innerHTML = Icons.profileVet || Icons.stethoscope;
