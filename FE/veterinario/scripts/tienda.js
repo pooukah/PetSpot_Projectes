@@ -40,7 +40,12 @@ const renderProductos = function() {
     let imgDiv = document.createElement('div');
     imgDiv.style.cssText = 'width:40px;height:40px;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--bg3)';
     let img = document.createElement('img');
-    img.src = p.foto_url || '';
+    if (p.foto_url) {
+      img.src = p.foto_url;
+    } else {
+      imgDiv.innerHTML = '';
+      ponerIcono(imgDiv, Icons.box);
+    }
     img.style.cssText = 'width:100%;height:100%;object-fit:cover';
 
     img.onerror = function () {
@@ -175,6 +180,7 @@ const cargarMisProductos = async function() {
     if (!response.ok) throw new Error('Error al cargar productos');
 
     let productos = await response.json();
+    console.log("PRODUCTOS VET:", productos);
     listaProductos = productos.map(p => ({
       id: p.id_producto,
       nombre: p.nombre,
