@@ -171,12 +171,17 @@ const cargarCitasCliente = async function() {
   }
 };
 
+const formatHora = (h) => {
+  if (!h) return '--:--';
+  return h.slice(0, 5);
+};
+
 const crearCardProxima = function(c) {
   let card = crearEl('div', { className: 'cita-card' });
   card.dataset.id = c.id;
 
   let timeDiv = crearEl('div', { className: 'cita-time' });
-  timeDiv.appendChild(crearEl('div', { className: 'hour', textContent: c.hora }));
+  timeDiv.appendChild(crearEl('div', { className: 'hour', textContent: formatHora(c.hora) }));
   timeDiv.appendChild(crearEl('div', { className: 'date', textContent: c.fecha }));
 
   let divider = crearEl('div', { className: 'cita-divider' });
@@ -343,7 +348,7 @@ const mostrarCitasDelDia = function(dia) {
     let card = crearEl('div', { className: 'cita-card', style: { marginBottom: '10px' } });
 
     let tDiv = crearEl('div', { className: 'cita-time' });
-    tDiv.appendChild(crearEl('div', { className: 'hour', textContent: c.hora }));
+    tDiv.appendChild(crearEl('div', { className: 'hour', textContent: formatHora(c.hora) }));
     tDiv.appendChild(crearEl('div', { className: 'date', textContent: 'Día ' + dia }));
 
     let sep = crearEl('div', { className: 'cita-divider' });

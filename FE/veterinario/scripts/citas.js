@@ -50,7 +50,8 @@ const renderCitas = function() {
     let c = filtradas[i];
     let fila = document.createElement('tr');
 
-    fila.appendChild(crearEl('td', { textContent: c.hora || '--:--' }));
+    let horaFormateada = c.hora ? c.hora.slice(0, 5) : '--:--';
+    fila.appendChild(crearEl('td', { textContent: horaFormateada }));
     fila.appendChild(crearEl('td', { textContent: c.fecha || '--/--/----' }));
     fila.appendChild(crearEl('td', { textContent: c.cliente_nombre || 'Cliente' }));
     fila.appendChild(crearEl('td', { textContent: c.mascota_nombre || 'Mascota' }));
