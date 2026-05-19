@@ -13,7 +13,12 @@
 
   const cargarProductos = async function() {
     try {
-      const response = await fetch("https://132.226.61.215:8081/productos/cliente");
+      const user = PetSpot.getUser();
+      const response = await fetch("https://132.226.61.215:8081/productos/cliente", {
+        headers: {
+          "x-user-email": user.email
+        }
+      });
       if (!response.ok) throw new Error("Error al cargar productos");
       productos = await response.json();
       
