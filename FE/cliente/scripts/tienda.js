@@ -13,7 +13,7 @@ let misPedidos = Almacen.cargar('pedidos');
 
 const cargarProductos = async function() {
   try {
-    const response = await fetch("http://127.0.0.1:8000/auth/productos/");
+    const response = await fetch("https://132.226.61.215:8081/auth/productos/");
     if (!response.ok) throw new Error("Error al cargar productos");
     productos = await response.json();
     

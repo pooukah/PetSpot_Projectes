@@ -90,7 +90,7 @@ const crearHandlerEliminar = function(id) {
 const eliminarProducto = async function(id) {
   let email = sessionStorage.getItem('user_email');
   try {
-    let response = await fetch(`http://127.0.0.1:8000/productos/${id}`, {
+    let response = await fetch(`https://132.226.61.215:8081/productos/${id}`, {
       method: "DELETE",
       headers: { "x-user-email": email }
     });
@@ -140,7 +140,7 @@ const guardarEdicion = async function() {
 
   let email = sessionStorage.getItem('user_email');
   try {
-    let response = await fetch(`http://127.0.0.1:8000/productos/${productoEditandoId}`, {
+    let response = await fetch(`https://132.226.61.215:8081/productos/${productoEditandoId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -167,7 +167,7 @@ const cargarMisProductos = async function() {
   if (!email) return;
 
   try {
-    let response = await fetch(`http://127.0.0.1:8000/productos/mis-productos`, {
+    let response = await fetch(`https://132.226.61.215:8081/productos/mis-productos`, {
       method: "GET",
       headers: { "x-user-email": email }
     });
@@ -210,7 +210,7 @@ const addProduct = async function() {
   }
 
   try {
-    let response = await fetch("http://127.0.0.1:8000/productos", {
+    let response = await fetch("https://132.226.61.215:8081/productos", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

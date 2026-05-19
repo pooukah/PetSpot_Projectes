@@ -60,7 +60,7 @@ async function cargarMascotasInicio() {
   try {
     let email = sessionStorage.getItem('user_email');
 
-    let response = await fetch(`http://127.0.0.1:8000/api/mascotas/mis-mascotas`, {
+    let response = await fetch(`https://132.226.61.215:8081/api/mascotas/mis-mascotas`, {
       headers: { 'x-user-email': email }
     });
 
@@ -74,7 +74,7 @@ async function cargarMascotasInicio() {
 
 async function cargarCitasInicio() {
   try {
-    let response = await fetch(`http://127.0.0.1:8000/api/citas/mis-citas`, {
+    let response = await fetch(`https://132.226.61.215:8081/api/citas/mis-citas`, {
       headers: { 'x-user-email': email }
     });
     if (!response.ok) throw new Error('Error cargando citas');

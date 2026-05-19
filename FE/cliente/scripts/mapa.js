@@ -10,7 +10,7 @@ let clinicasFiltradas = [];
 let filtroActivo = 'todas'; 
 
 const cargarClinicas = async function(){
-  const API_URL = "http://127.0.0.1:8000/clinicas";
+  const API_URL = "https://132.226.61.215:8081/clinicas";
   console.log('1. Iniciando fetch...');
   try{
     const resposta = await fetch(API_URL, {

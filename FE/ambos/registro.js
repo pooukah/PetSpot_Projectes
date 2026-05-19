@@ -58,7 +58,7 @@ const actualizarIconoTema = function() {
 };
 
 const cargarClinicas = async function() {
-  const API_URL = "http://127.0.0.1:8000/clinicas/registro";
+  const API_URL = "https://132.226.61.215:8081/clinicas/registro";
   try {
     const resposta = await fetch(API_URL, {
       method: 'GET',
@@ -127,9 +127,9 @@ const registrarse = async function() {
   let url = "";
 
   if (perfilSeleccionado === 'cliente') {
-    url = "http://127.0.0.1:8000/auth/registro/cliente";
+    url = "https://132.226.61.215:8081/auth/registro/cliente";
   } else {
-    url = "http://127.0.0.1:8000/auth/registro/veterinario";
+    url = "https://132.226.61.215:8081/auth/registro/veterinario";
     
     let clinicaNombre = regClinica.options[regClinica.selectedIndex]?.text;
     

@@ -17,7 +17,7 @@ let petIcons = { dog: Icons.dog, cat: Icons.cat, rabbit: Icons.rabbit };
 const cargarPerfil = async function() {
   if (!user || !user.email) return;
   try {
-    const resp = await fetch(`http://127.0.0.1:8000/auth/perfil/cliente/${user.email}`);
+    const resp = await fetch(`https://132.226.61.215:8081/auth/perfil/cliente/${user.email}`);
     const data = await resp.json();
     
     document.getElementById('input-nombre').value = data.nombre || '';
@@ -36,7 +36,7 @@ const cargarPerfil = async function() {
 };
 
 const cargarClinicas = async function() {
-  const API_URL = "http://127.0.0.1:8000/clinicas/registro";
+  const API_URL = "https://132.226.61.215:8081/clinicas/registro";
   try {
     const resp = await fetch(API_URL);
     const clinicas = await resp.json();
@@ -58,7 +58,7 @@ const cargarMascotas = async function() {
   if (!email) return;
   
   try {
-    const response = await fetch(`http://127.0.0.1:8000/api/mascotas/mis-mascotas`, {
+    const response = await fetch(`https://132.226.61.215:8081/api/mascotas/mis-mascotas`, {
       headers: { "x-user-email": email }
     });
     
@@ -97,7 +97,7 @@ const guardarDatos = async function() {
   const email = sessionStorage.getItem('user_email');
   
   try{
-    const response = await fetch(`http://127.0.0.1:8000/auth/perfil/cliente/${email}`, {
+    const response = await fetch(`https://132.226.61.215:8081/auth/perfil/cliente/${email}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -293,7 +293,7 @@ const crearHandlerGuardarMascota = function(id) {
     const email = sessionStorage.getItem('user_email');
     
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/mascotas/${id}`, {
+      const response = await fetch(`https://132.226.61.215:8081/api/mascotas/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -327,7 +327,7 @@ const eliminarMascota = async function(id) {
   const email = sessionStorage.getItem('user_email');
   
   try {
-    const response = await fetch(`http://127.0.0.1:8000/api/mascotas/${id}`, {
+    const response = await fetch(`https://132.226.61.215:8081/api/mascotas/${id}`, {
       method: "DELETE",
       headers: { "x-user-email": email }
     });
@@ -362,7 +362,7 @@ const addPet = async function() {
   const email = sessionStorage.getItem('user_email');
   
   try {
-    const response = await fetch(`http://127.0.0.1:8000/api/mascotas/crear`, {
+    const response = await fetch(`https://132.226.61.215:8081/api/mascotas/crear`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -443,7 +443,7 @@ const cambiarPassword = async function() {
   const email = sessionStorage.getItem('user_email');
   
   try {
-    const response = await fetch(`http://127.0.0.1:8000/auth/cambiar-password/${email}`, {
+    const response = await fetch(`https://132.226.61.215:8081/auth/cambiar-password/${email}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

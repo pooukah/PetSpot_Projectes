@@ -12,7 +12,7 @@ let filtroActual = 'todas';
 const cargarCitas = async function() {
   try {
     let email = sessionStorage.getItem('user_email');
-    let response = await fetch(`http://127.0.0.1:8000/api/citas/veterinario/mis-citas`, { // HACER BIEN EL FECTH
+    let response = await fetch(`https://132.226.61.215:8081/api/citas/veterinario/mis-citas`, { // HACER BIEN EL FECTH
       headers: { 'x-user-email': email }
     });
     if (!response.ok) throw new Error('Error al cargar citas');
@@ -94,7 +94,7 @@ const renderCitas = function() {
 const cambiarEstado = async function(id, nuevoEstado) {
   try {
     let email = sessionStorage.getItem('user_email');
-    let response = await fetch(`http://127.0.0.1:8000/api/citas/${id}/estado`, { // HACER BIEN EL FETCH
+    let response = await fetch(`https://132.226.61.215:8081/api/citas/${id}/estado`, { // HACER BIEN EL FETCH
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'x-user-email': email },
       body: JSON.stringify({ estado: nuevoEstado })
@@ -111,7 +111,7 @@ const cambiarEstado = async function(id, nuevoEstado) {
 const eliminarCita = async function(id) {
   try {
     let email = sessionStorage.getItem('user_email');
-    let response = await fetch(`http://127.0.0.1:8000/api/citas/${id}`,{
+    let response = await fetch(`https://132.226.61.215:8081/api/citas/${id}`,{
         method: 'DELETE',
         headers: {
           'x-user-email': email
@@ -172,7 +172,7 @@ const addCita = async function() {
   try {
     let email = sessionStorage.getItem('user_email');
     // CREA NUEV CITA
-    let response = await fetch(`http://127.0.0.1:8000/api/citas/crear`, { // HACER BIEN EL FETCH
+    let response = await fetch(`https://132.226.61.215:8081/api/citas/crear`, { // HACER BIEN EL FETCH
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-user-email': email },
       body: JSON.stringify({
@@ -202,7 +202,7 @@ const cargarClientesMascotas = async function() {
   try {
     let email = sessionStorage.getItem('user_email');
     // LISTA DE LOS CLIENTES DEL VET LOGEADO
-    let response = await fetch(`http://127.0.0.1:8000/api/clientes/mis-clientes`, {
+    let response = await fetch(`https://132.226.61.215:8081/api/clientes/mis-clientes`, {
       headers: { 'x-user-email': email }
     });
     if (!response.ok) throw new Error('Error al cargar clientes');
@@ -226,7 +226,7 @@ document.getElementById('nueva-cliente').addEventListener('change', async functi
   try {
     let email = sessionStorage.getItem('user_email');
     // LAS MASCOTAS DEUN LCIENTE EN ESPECIFICO
-    let response = await fetch(`http://127.0.0.1:8000/api/mascotas/cliente/${clienteId}`, {
+    let response = await fetch(`https://132.226.61.215:8081/api/mascotas/cliente/${clienteId}`, {
       headers: { 'x-user-email': email }
     });
     if (!response.ok) throw new Error('Error al cargar mascotas');

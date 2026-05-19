@@ -18,7 +18,7 @@ const cargarPerfil = async function() {
     let email = sessionStorage.getItem('user_email');
 
     let response = await fetch(
-      `http://127.0.0.1:8000/auth/perfil/veterinario/${email}`
+      `https://132.226.61.215:8081/auth/perfil/veterinario/${email}`
     );
 
     if (!response.ok) {
@@ -85,7 +85,7 @@ const guardarDatos = async function() {
     };
 
     let response = await fetch(
-      `http://127.0.0.1:8000/auth/perfil/veterinario/${email}`,
+      `https://132.226.61.215:8081/auth/perfil/veterinario/${email}`,
       {
         method: 'PUT',
         headers: {
@@ -158,7 +158,7 @@ const cambiarPassword = async function() {
   const email = sessionStorage.getItem('user_email');
  
   try {
-    const response = await fetch(`http://127.0.0.1:8000/auth/cambiar-password/${email}`, {
+    const response = await fetch(`https://132.226.61.215:8081/auth/cambiar-password/${email}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

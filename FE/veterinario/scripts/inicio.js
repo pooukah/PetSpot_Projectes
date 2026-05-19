@@ -89,7 +89,7 @@ const cargarProximasCitas = async function() {
   try {
     let email = sessionStorage.getItem('user_email');
     let response = await fetch(
-      'http://127.0.0.1:8000/api/citas/veterinario/mis-citas',
+      'https://132.226.61.215:8081/api/citas/veterinario/mis-citas',
       {
         headers: {
           'x-user-email': email
@@ -127,7 +127,7 @@ const cargarCitasPendientes = async function() {
   try {
     let email = sessionStorage.getItem('user_email');
     let response = await fetch(
-      'http://127.0.0.1:8000/api/citas/veterinario/mis-citas',
+      'https://132.226.61.215:8081/api/citas/veterinario/mis-citas',
       {headers: {'x-user-email': email}});
     if (!response.ok) {
       throw new Error('Error al cargar citas');
@@ -150,7 +150,7 @@ const cargarPedidosPendientes = async function() {
   try {
     let email = sessionStorage.getItem('user_email');
     let response = await fetch(
-      'http://127.0.0.1:8000/api/pedidos/veterinario/mis-pedidos',
+      'https://132.226.61.215:8081/api/pedidos/veterinario/mis-pedidos',
       {
         headers: {
           'x-user-email': email

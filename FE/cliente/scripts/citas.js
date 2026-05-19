@@ -21,7 +21,7 @@ const cargarMascotasCliente = async function() {
   if (!email) return;
   
   try {
-    const response = await fetch(`http://127.0.0.1:8000/api/mascotas/mis-mascotas`, {
+    const response = await fetch(`https://132.226.61.215:8081/api/mascotas/mis-mascotas`, {
       headers: { "x-user-email": email }
     });
     
@@ -59,7 +59,7 @@ const cargarVeterinariosCliente = async function() {
   if (!email) return;
 
   try {
-    const response = await fetch('http://127.0.0.1:8000/api/veterinarios/mis-veterinarios', {
+    const response = await fetch('https://132.226.61.215:8081/api/veterinarios/mis-veterinarios', {
       headers: { "x-user-email": email }
     });
 
@@ -151,7 +151,7 @@ const cargarCitasCliente = async function() {
     renderProximas();
     renderCalendario();
     const response = await fetch(
-      'http://127.0.0.1:8000/api/citas/mis-citas',
+      'https://132.226.61.215:8081/api/citas/mis-citas',
       {
         headers: {
           'x-user-email': email
@@ -215,7 +215,7 @@ const cancelarCita = async function(id, cardEl) {
   try {
     const email = sessionStorage.getItem('user_email');
     const response = await fetch(
-      `http://127.0.0.1:8000/api/citas/${id}`,
+      `https://132.226.61.215:8081/api/citas/${id}`,
       {
         method: 'DELETE',
         headers: {
@@ -389,7 +389,7 @@ const solicitarCita = async function() {
   }
   try{
     const email = sessionStorage.getItem('user_email');
-    const response = await fetch('http://127.0.0.1:8000/api/citas/crear', {
+    const response = await fetch('https://132.226.61.215:8081/api/citas/crear', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
