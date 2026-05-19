@@ -228,7 +228,7 @@ def get_mis_productos(x_user_email: str = Header(None)):
         conn.close()
 
 ##################################################### 7. GET PRODUCTS (cliente)    
- @app.get("/productos/cliente")
+@app.get("/productos/cliente")
 def get_productos_cliente(x_user_email: str = Header(None)):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
