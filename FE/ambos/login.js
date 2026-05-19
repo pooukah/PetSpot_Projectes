@@ -25,7 +25,7 @@ const seleccionarPerfil = function(tipo){
 };
 
 // USO INNERHTML EN VARIOS JS PARA LOS SVG, PERDONAME ORIOL
-const actualizarIconoTema = await function(){
+const actualizarIconoTema = function(){
   let oscuro = localStorage.getItem('ps_dark') !== 'false';
   ponerIcono(loginThemeIcon, oscuro ? Icons.moon : Icons.sun);
   loginThemeToggle.classList.toggle('on', !oscuro);
