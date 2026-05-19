@@ -226,7 +226,38 @@ def get_mis_productos(x_user_email: str = Header(None)):
     finally:
         cursor.close()
         conn.close()
- 
+
+##################################################### 7. GET PRODUCTS (cliente)    
+ @app.get("/productos/cliente")
+def get_productos_cliente(x_user_email: str = Header(None)):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        cursor.execute("""
+            SELECT id_clinica
+            FROM cliente
+            WHERE email = %s
+        """, (x_user_email,))
+        cliente = cursor.fetchone()
+
+        if not cliente or not cliente["id_clinica"]:
+            return []
+
+        id_clinica = cliente["id_clinica"]
+
+        cursor.execute("""
+            SELECT id_producto, nombre, categoria, precio, stock, foto_url, categoria
+            FROM producto
+            WHERE id_clinica = %s
+            ORDER BY id_producto DESC
+        """, (id_clinica,))
+
+        return cursor.fetchall()
+    finally:
+        cursor.close()
+        conn.close()
+
 ##################################################### 8. UPDATE PRODUCT (vet)
 @app.get("/productos/{id_producto}")
 def get_producto(id_producto: int, x_user_email: str = Header(None)):
