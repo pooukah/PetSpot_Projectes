@@ -49,7 +49,7 @@ const iniciarSesion = async function() {
   }
 
   try {
-    const response = await fetch("https://132.226.61.215/auth/login", {
+    const response = await fetch("https://132.226.61.215:8081/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password, rol: perfilSeleccionado })
