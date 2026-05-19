@@ -27,7 +27,7 @@ const crearTarjetaCita = function(c) {
   let card = crearEl('div', { className: 'cita-card' });
 
   let timeDiv = crearEl('div', { className: 'cita-time' });
-  let hourDiv = crearEl('div', { className: 'hour', textContent: c.hora });
+  let hourDiv = crearEl('div', { className: 'hour', textContent: formatHora(c.hora) });
   let dateDiv = crearEl('div', { className: 'date', textContent: c.fecha });
   timeDiv.appendChild(hourDiv);
   timeDiv.appendChild(dateDiv);
@@ -54,6 +54,11 @@ const crearTarjetaCita = function(c) {
   card.appendChild(infoDiv);
   card.appendChild(badge);
   return card;
+};
+
+const formatHora = (h) => {
+  if (!h) return '--:--';
+  return h.slice(0, 5);
 };
 
 async function cargarMascotasInicio() {
